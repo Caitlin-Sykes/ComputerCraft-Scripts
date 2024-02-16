@@ -2,8 +2,9 @@
 
 function PlayerJoin(username)
     SetColour(username)
+    local txt = username .. " has joined the world at " .. GetCurrentTime()
     -- gets current time in utc
-    monitor.write(username .. " has joined the world at " .. GetCurrentTime())
+    PrintMonitor(txt)
     local file = fs.open("/cait/test.txt", "a")                                       -- Open file in append mode
     file.writeLine(username .. " has joined the world at " .. GetCurrentTime()) -- Write player's name to the file
     file.close()                                                                -- Close the file
@@ -11,7 +12,9 @@ end
 
 function PlayerLeave(username)
     SetColour(username)
-    monitor.write(username .. " has joined the world at " .. GetCurrentTime())
+     local txt = username .. " has left the world at " .. GetCurrentTime()
+    -- gets current time in utc
+    PrintMonitor(txt)
     local file = fs.open("/cait/test.txt", "a")                                       -- Open file in append mode
     file.writeLine(username .. " has joined the world at " .. GetCurrentTime()) -- Write player's name to the file
     file.close()                                                                -- Close the file
@@ -24,12 +27,10 @@ end
 
 -- A function to set colour depending on username
 function SetColour(username)
-    if username == "Ridgey28" then
-        return monitor.setTextColor(colors.purple)
-    elseif username == "winer2222" then
-        return monitor.setTextColor(colors.red)
+    if (txtColor[username] == nil) then
+       monitor.setTextColor(colors.blue)
     else
-        return monitor.setTextColor(colors.green)
+        monitor.setTextColor(txtColor[username])
     end
 end
 
@@ -37,8 +38,6 @@ end
 function OnPlayerJoin()
     while true do
         local event, username = os.pullEvent("playerJoin")
-        -- Write to monitor
-        monitor.write("evnt" .. event .. " usr " .. username)
 
         -- Call function
         PlayerJoin(username)
@@ -49,14 +48,24 @@ end
 function OnPlayerLeave()
     while true do
         local event, username = os.pullEvent("playerLeave")
-        -- Write to monitor
-        monitor.write("evnt" .. event .. " usr " .. username)
-
+        
         -- Call function
         PlayerLeave(username)
     end
 end
 
+-- A function to the draw the header
+function DrawHeader()
+    local txt = "-= Player Log =-"
+    SetColour("menu")
+    local mp = width / 2
+    local wot = string.len(txt) / 2
+    local dif = mp - wot
+
+    
+    monitor.setCursorPos(dif+1, 1)
+    monitor.write(txt)
+end
 
 -- https://www.computercraft.info/forums2/index.php?/topic/15790-modifying-a-word-wrapping-function/
 function wrap(str, limit)
@@ -80,10 +89,11 @@ end
 -- A function to print stuff to the monitor
 function PrintMonitor(text)
     local text_to_wrap = wrap(text, width)
-    for k, v in pairs(text_to_wrap) do 
-        -- print(v) 
-        monitor.setCursorPos(1, k)
+    for k, v in pairs(text_to_wrap) do
+        DrawHeader()
+        monitor.setCursorPos(1, height)
         monitor.write(v .. "\n")
+        monitor.scroll(1)
     end
 end
 
@@ -91,12 +101,19 @@ end
 -- Gets the monitor that's adjacent
 monitor = peripheral.find("monitor")
 detector = peripheral.find("playerDetector")
+
+txtColor = {
+        ["Ridgey28"] = colors.purple,
+        ["winer2222"] = colors.red, 
+        ["menu"] = colors.orange,
+        ["space928"] = colors.green, 
+        ["PotatoNerdGames"] = colors.pink, 
+    }
+
 -- Fixes scaling
 width, height = monitor.getSize()
 -- Clears monitor (obviously)
 monitor.clear()
-SetColour("winer2222")
-PrintMonitor("Hi monsieur rouge, je ne suis mange pas.")
-
--- While playerJoin event is true
+DrawHeader()
+-- Waits for any event
 parallel.waitForAny(OnPlayerJoin, OnPlayerLeave)
