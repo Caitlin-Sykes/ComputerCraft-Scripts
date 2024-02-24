@@ -17,7 +17,7 @@ The following repository is a collection of small scripts that do various things
 
 - **Player Logging Script ¹**
 > [!note]  
-> Scripts marked with an ¹ should be chunkloaded
+> Scripts marked with a ¹ should be chunkloaded
 
 ## Scripts Overview
 
