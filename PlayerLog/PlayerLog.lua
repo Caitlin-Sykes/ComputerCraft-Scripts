@@ -1,45 +1,44 @@
--- Needs advanced peripherals' player detector
+-- -----------------------------------------------------------------------------
+-- Player Log In Detector
+-- Uses advanced peripherals Player Detectors
+-- -----------------------------------------------------------------------------
 
+
+-- -----------------------------------------------------------------------------
+-- On Events
+-- -----------------------------------------------------------------------------
+
+
+-- Player join func
 function PlayerJoin(username)
     SetColour(username)
     local txt = username .. " has joined the world at " .. GetCurrentTime()
     -- gets current time in utc
     PrintMonitor(txt)
-    local file = fs.open("/cait/test.txt", "a")                                       -- Open file in append mode
+    local file = fs.open("/logger/log.txt", "a")                                       -- Open file in append mode
     file.writeLine(username .. " has joined the world at " .. GetCurrentTime()) -- Write player's name to the file
     file.close()                                                                -- Close the file
 end
 
+-- Player leave func
 function PlayerLeave(username)
     SetColour(username)
      local txt = username .. " has left the world at " .. GetCurrentTime()
     -- gets current time in utc
     PrintMonitor(txt)
-    local file = fs.open("/cait/test.txt", "a")                                       -- Open file in append mode
-    file.writeLine(username .. " has joined the world at " .. GetCurrentTime()) -- Write player's name to the file
+    local file = fs.open("/logger/log.txt", "a")                                       -- Open file in append mode
+    file.writeLine(username .. " has left the world at " .. GetCurrentTime()) -- Write player's name to the file
     file.close()                                                                -- Close the file
 end
 
--- Gets current time in utc
-function GetCurrentTime()
-    return os.epoch("utc")
-end
-
--- A function to set colour depending on username
-function SetColour(username)
-    if (txtColor[username] == nil) then
-       monitor.setTextColor(colors.blue)
-    else
-        monitor.setTextColor(txtColor[username])
-    end
-end
+-- -----------------------------------------------------------------------------
+-- Events
+-- -----------------------------------------------------------------------------
 
 -- On player join
 function OnPlayerJoin()
     while true do
         local event, username = os.pullEvent("playerJoin")
-
-        -- Call function
         PlayerJoin(username)
     end
 end
@@ -48,22 +47,26 @@ end
 function OnPlayerLeave()
     while true do
         local event, username = os.pullEvent("playerLeave")
-        
-        -- Call function
         PlayerLeave(username)
     end
 end
 
--- A function to the draw the header
+-- ------------------------------------------------------------------------
+-- Monitor Stuff
+-- -----------------------------------------------------------------------------
+
+-- A function to the draw the header of the monitor
 function DrawHeader()
-    local txt = "-= Player Log =-"
+    local txt = "-=Player  Log=-"
     SetColour("menu")
+    -- Calculates midpoint of monitor
     local mp = width / 2
     local wot = string.len(txt) / 2
     local dif = mp - wot
-
     
+    -- Sets the cursor pos
     monitor.setCursorPos(dif+1, 1)
+    -- Writes to monitor
     monitor.write(txt)
 end
 
@@ -90,18 +93,42 @@ end
 function PrintMonitor(text)
     local text_to_wrap = wrap(text, width)
     for k, v in pairs(text_to_wrap) do
-        DrawHeader()
+        monitor.setTextColor(before_header)
         monitor.setCursorPos(1, height)
         monitor.write(v .. "\n")
         monitor.scroll(1)
+        DrawHeader()
     end
 end
 
+-- A function to set colour depending on username
+function SetColour(username)
+    if (txtColor[username] == nil) then
+        monitor.setTextColor(colors.blue)
+    else
+        monitor.setTextColor(txtColor[username])
+    end
+end
+
+-- -----------------------------------------------------------------------------
+-- Misc Stuff
+-- -----------------------------------------------------------------------------
+
+-- Gets current time in utc
+function GetCurrentTime()
+    return os.epoch("utc")
+end
+
+
+-- -----------------------------------------------------------------------------
+-- Init Stuff
+-- -----------------------------------------------------------------------------
 
 -- Gets the monitor that's adjacent
-monitor = peripheral.find("monitor")
+monitor = peripheral.wrap("monitor_4")
 detector = peripheral.find("playerDetector")
 
+-- Dict for colours
 txtColor = {
         ["Ridgey28"] = colors.purple,
         ["winer2222"] = colors.red, 
@@ -110,6 +137,11 @@ txtColor = {
         ["PotatoNerdGames"] = colors.pink, 
     }
 
+-- Sets default colour
+before_header = colors.orange
+
+-- Sets text scale
+monitor.setTextScale(0.5)
 -- Fixes scaling
 width, height = monitor.getSize()
 -- Clears monitor (obviously)
