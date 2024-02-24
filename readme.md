@@ -15,8 +15,9 @@ The following repository is a collection of small scripts that do various things
 
 ## Features
 
-- **Player Logging Script** $${\color{red} - Computer should be chunkloaded}$$	
-
+- **Player Logging Script**
+> [!note]  
+> - Computer should be chunkloaded
 ## Scripts Overview
 
 1. **Player Logger**:
