@@ -11,24 +11,26 @@
 
 -- Player join func
 function PlayerJoin(username)
+    -- Sets colour dependent on username
     SetColour(username)
+
     local txt = username .. " has joined the world at " .. GetCurrentTime()
-    -- gets current time in utc
+
+    -- Writes messages to file and monitor
     PrintMonitor(txt)
-    local file = fs.open("/logger/log.txt", "a")                                       -- Open file in append mode
-    file.writeLine(username .. " has joined the world at " .. GetCurrentTime()) -- Write player's name to the file
-    file.close()                                                                -- Close the file
+    WriteFile(txt)
 end
 
 -- Player leave func
 function PlayerLeave(username)
+    -- Sets colour dependent on username
     SetColour(username)
-     local txt = username .. " has left the world at " .. GetCurrentTime()
-    -- gets current time in utc
+
+    local txt = username .. " has left the world at " .. GetCurrentTime()
+
+    -- Writes messages to file and monitor
     PrintMonitor(txt)
-    local file = fs.open("/logger/log.txt", "a")                                       -- Open file in append mode
-    file.writeLine(username .. " has left the world at " .. GetCurrentTime()) -- Write player's name to the file
-    file.close()                                                                -- Close the file
+    WriteFile(txt)
 end
 
 -- -----------------------------------------------------------------------------
@@ -71,6 +73,7 @@ function DrawHeader()
 end
 
 -- https://www.computercraft.info/forums2/index.php?/topic/15790-modifying-a-word-wrapping-function/
+-- Makes the monitor text wrap nicely
 function wrap(str, limit)
     local Lines, here, limit = {}, 1, limit or 72
     Lines[1] = string.sub(str, 1, str:find("(%s+)()(%S+)()") - 1) -- Put the first word of the string in the first index of the table.
@@ -103,12 +106,41 @@ end
 
 -- A function to set colour depending on username
 function SetColour(username)
+    -- Default to blue if nil
     if (txtColor[username] == nil) then
         monitor.setTextColor(colors.blue)
+        before_header = colors.blue
+
+    -- If username menu, look up the menu colour
+    elseif (username == "menu") then
+        monitor.setTextColor(txtColor[username])
+    -- Else, look up the colour, and set before header 
     else
         monitor.setTextColor(txtColor[username])
+        before_header = txtColor[username]
     end
 end
+
+-- -----------------------------------------------------------------------------
+-- I/O Stuff
+-- -----------------------------------------------------------------------------
+-- Opens a file in append mode
+function OpenFile()
+    return fs.open("/logger/log.txt", "a")
+end
+
+-- Closes a file
+function CloseFile(file)
+    file.close()                                                              
+end
+
+-- Writes to a file
+function WriteFile(msg)
+    file = OpenFile()
+    file.writeLine(msg) 
+    CloseFile(file)
+end
+
 
 -- -----------------------------------------------------------------------------
 -- Misc Stuff
