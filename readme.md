@@ -15,7 +15,7 @@ The following repository is a collection of small scripts that do various things
 
 ## Features
 
-- **Player Logging Script** - <span style="color:red;">Computer should be chunkloaded</span>
+- **Player Logging Script** - ```diff - Computer should be chunkloaded ```
 
 
 ## Scripts Overview
