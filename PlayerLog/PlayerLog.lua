@@ -3,6 +3,9 @@
 -- Uses advanced peripherals Player Detectors
 -- -----------------------------------------------------------------------------
 
+-- Imports my IOFile stuff
+os.loadAPI("IOFile.lua") 
+os.loadAPI("TimeCalculator.lua")
 
 -- -----------------------------------------------------------------------------
 -- On Events
@@ -14,11 +17,12 @@ function PlayerJoin(username)
     -- Sets colour dependent on username
     SetColour(username)
 
-    local txt = username .. " has joined the world at " .. GetCurrentTime()
+    local txt = username .. " has joined the world"
 
     -- Writes messages to file and monitor
     PrintMonitor(txt)
-    WriteFile(txt)
+    local txtLog = txt .. " at " .. TimeCalculator.GetCurrentTime() .. ":" .. TimeCalculator.GetDate()
+    IOFile.WriteFile(txtLog)
 end
 
 -- Player leave func
@@ -26,11 +30,12 @@ function PlayerLeave(username)
     -- Sets colour dependent on username
     SetColour(username)
 
-    local txt = username .. " has left the world at " .. GetCurrentTime()
+    local txt = username .. " has left the world"
 
     -- Writes messages to file and monitor
     PrintMonitor(txt)
-    WriteFile(txt)
+    local txtLog = txt .. " at " .. TimeCalculator.GetCurrentTime() .. ":" .. TimeCalculator.GetDate()
+    IOFile.WriteFile(txtLog)
 end
 
 -- -----------------------------------------------------------------------------
@@ -120,37 +125,6 @@ function SetColour(username)
         before_header = txtColor[username]
     end
 end
-
--- -----------------------------------------------------------------------------
--- I/O Stuff
--- -----------------------------------------------------------------------------
--- Opens a file in append mode
-function OpenFile()
-    return fs.open("/logger/log.txt", "a")
-end
-
--- Closes a file
-function CloseFile(file)
-    file.close()                                                              
-end
-
--- Writes to a file
-function WriteFile(msg)
-    file = OpenFile()
-    file.writeLine(msg) 
-    CloseFile(file)
-end
-
-
--- -----------------------------------------------------------------------------
--- Misc Stuff
--- -----------------------------------------------------------------------------
-
--- Gets current time in utc
-function GetCurrentTime()
-    return os.epoch("utc")
-end
-
 
 -- -----------------------------------------------------------------------------
 -- Init Stuff
