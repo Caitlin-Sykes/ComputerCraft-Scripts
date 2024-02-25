@@ -21,7 +21,7 @@ function PlayerJoin(username)
 
     -- Writes messages to file and monitor
     PrintMonitor(txt)
-    local txtLog = txt .. " at " .. TimeCalculator.GetCurrentTime() .. ":" .. TimeCalculator.GetDate()
+    local txtLog = username .. ":joined:" .. TimeCalculator.GetCurrentTime()
     IOFile.WriteFile(txtLog)
 end
 
@@ -34,7 +34,7 @@ function PlayerLeave(username)
 
     -- Writes messages to file and monitor
     PrintMonitor(txt)
-    local txtLog = txt .. " at " .. TimeCalculator.GetCurrentTime() .. ":" .. TimeCalculator.GetDate()
+    local txtLog = username .. ":left:" .. TimeCalculator.GetCurrentTime()
     IOFile.WriteFile(txtLog)
 end
 

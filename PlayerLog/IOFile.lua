@@ -3,7 +3,7 @@
 -- -----------------------------------------------------------------------------
 -- Opens a file in append mode
 function OpenFile()
-    return fs.open("/logger/log.txt", "a")
+    return fs.open(PATH, "a")
 end
 
 -- Closes a file
@@ -17,3 +17,11 @@ function WriteFile(msg)
     file.writeLine(msg) 
     CloseFile(file)
 end
+
+
+-- -----------------------------------------------------------------------------
+-- I/O Stuff
+-- -----------------------------------------------------------------------------
+
+-- Path to logging directory
+PATH = "/logger/log.txt"
