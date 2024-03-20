@@ -8,6 +8,7 @@
   - [Requirements](#requirements)
   - [Customisation](#customisation)
     - [Custom Player Colours](#custom-player-colours)
+    - [Change Logging Path](#change-logging-path)
 
 ## Introduction
 
@@ -42,4 +43,12 @@ txtColor = {
     ["winer2222"] = colors.red, 
     ["menu"] = colors.orange,
 }
+```
+
+### Change Logging Path
+
+To change the logging path, change the path located within ```playerlog.md``` under the ```PATH``` variable. 
+
+```lua
+PATH = "/logger/log.txt"
 ```

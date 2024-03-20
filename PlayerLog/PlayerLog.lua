@@ -11,6 +11,12 @@ os.loadAPI("TimeCalculator.lua")
 -- On Events
 -- -----------------------------------------------------------------------------
 
+-- Pads the monitor
+function rpad(s, l, c)
+    local res = s .. string.rep(c or ' ', l - #s)
+
+    return res, res ~= s
+end
 
 -- Player join func
 function PlayerJoin(username)
@@ -23,6 +29,9 @@ function PlayerJoin(username)
     PrintMonitor(txt)
     local txtLog = username .. ":joined:" .. TimeCalculator.GetCurrentTime()
     IOFile.WriteFile(txtLog)
+
+    TopThreePrint()
+
 end
 
 -- Player leave func
@@ -36,6 +45,24 @@ function PlayerLeave(username)
     PrintMonitor(txt)
     local txtLog = username .. ":left:" .. TimeCalculator.GetCurrentTime()
     IOFile.WriteFile(txtLog)
+    TopThreePrint()
+end
+
+-- Refreshes every hour
+function RefreshHourly()
+    -- Define the duration of an hour in seconds
+    local hourInSeconds = 3600
+
+    -- Main loop
+    while true do
+        DrawHeader()
+        TopThreePrint()
+        file = fs.open("refresh.txt", "a")
+        file.writeLine("Refreshed at " .. TimeCalculator.GetCurrentTime()) 
+        file.close()
+    -- Pause execution for one hour
+    os.sleep(hourInSeconds)
+    end
 end
 
 -- -----------------------------------------------------------------------------
@@ -57,6 +84,17 @@ function OnPlayerLeave()
         PlayerLeave(username)
     end
 end
+
+-- Waits for keypress to kill the program
+function waitForKeyPress()
+    while true do
+      local event, key = os.pullEvent("key")
+      if key == keys.q then
+        return key
+      end
+    end
+end
+
 
 -- ------------------------------------------------------------------------
 -- Monitor Stuff
@@ -103,10 +141,23 @@ function PrintMonitor(text)
     for k, v in pairs(text_to_wrap) do
         monitor.setTextColor(before_header)
         monitor.setCursorPos(1, height)
-        monitor.write(v .. "\n")
         monitor.scroll(1)
+        monitor.write(rpad(v, width))
+    end
+end
+
+-- A function to print stuff to the monitor
+function PrintTopThree(text, pos)
+    local text_to_wrap = wrap(text, width)
+    for k, v in pairs(text_to_wrap) do
+        monitor.setTextColor(before_header)
+        monitor.setCursorPos(1, k + pos)
+        monitor.write(rpad(v, width))
         DrawHeader()
     end
+
+    monitor.setCursorPos(1, (height))
+    return #text_to_wrap
 end
 
 -- A function to set colour depending on username
@@ -123,6 +174,62 @@ function SetColour(username)
     else
         monitor.setTextColor(txtColor[username])
         before_header = txtColor[username]
+    end
+end
+
+-- Prints the top three to a function
+function TopThreePrint()
+    pos = 1
+    for i, playerInfo in ipairs(TimeCalculator.topThree) do
+
+    -- Text to be displayed
+    local txt = i .. ": " .. playerInfo.player .. " - " .. playerInfo.hours .. "hrs and " .. playerInfo.minutes .. "mins"
+
+    -- Sets colour for each player
+    SetColour(playerInfo.player)
+    
+    -- Writes to monitor
+    pos = pos + PrintTopThree(txt, pos)
+    end
+end
+
+-- For the blinky icon in the bottom right corner
+function Blink()
+    local yes = false
+    -- Main loop
+    while true do
+        monitor.setCursorPos(width, height)
+        if yes then
+            monitor.write("\131")
+            yes = false
+        else
+            monitor.write("\140")
+            yes = true
+        end
+        os.sleep(1)
+    end
+end
+
+-- -----------------------------------------------------------------------------
+-- DEBUG Stuff
+-- -----------------------------------------------------------------------------
+
+-- DEBUGGING
+function pickRandomString(strings)
+    local index = math.random(1, #strings)
+    return strings[index]
+end
+
+
+-- Refreshes every hour
+function LoginPlayer()
+    -- Define the duration of an hour in seconds
+    local hourInSeconds = 5
+
+    -- Main loop
+    while true do
+    os.sleep(hourInSeconds)
+    PlayerJoin(pickRandomString({"TEST_User1", "TEST_User2", "TEST_User3", "TEST_User4"}))
     end
 end
 
@@ -150,8 +257,11 @@ before_header = colors.orange
 monitor.setTextScale(0.5)
 -- Fixes scaling
 width, height = monitor.getSize()
+
 -- Clears monitor (obviously)
 monitor.clear()
-DrawHeader()
+TopThreePrint()
+
+
 -- Waits for any event
-parallel.waitForAny(OnPlayerJoin, OnPlayerLeave)
+parallel.waitForAny(OnPlayerJoin, OnPlayerLeave, RefreshHourly, waitForKeyPress, Blink)

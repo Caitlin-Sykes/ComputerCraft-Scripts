@@ -20,42 +20,38 @@ function CalculateTotalPlayerTime()
         -- If not null
         if playerName and action and timestamp then
             -- Convert timestamp to milliseconds
-            local timeInMilliseconds = tonumber(timestamp)
+            local timeInSeconds = tonumber(timestamp)/1000
             
             -- Initialize player entry if it doesn't exist
             if not playerTimes[playerName] then
-                playerTimes[playerName] = {totalTime = 0, lastActionTimestamp = timeInMilliseconds}
-            else
-                -- Calculate time difference since last action and update total time
-                local timeDifference = timeInMilliseconds - playerTimes[playerName].lastActionTimestamp
-                playerTimes[playerName].totalTime = playerTimes[playerName].totalTime + timeDifference
-                playerTimes[playerName].lastActionTimestamp = timeInMilliseconds
+                playerTimes[playerName] = {totalTime = 0, lastActionTimestamp = -1, sessions = {}}
             end
+            
+            if action == "joined" then
+                playerTimes[playerName].sessions[timeInSeconds] = {startSess = timeInSeconds, endSess = -1}
+            elseif action == "left" then
+                if not (playerTimes[playerName].sessions[playerTimes[playerName].lastActionTimestamp] == nil) then
+                    -- Calculate time difference since last action and update total time
+                    local timeDifference = timeInSeconds - playerTimes[playerName].sessions[playerTimes[playerName].lastActionTimestamp].startSess
+                    playerTimes[playerName].sessions[playerTimes[playerName].lastActionTimestamp].endSess = timeInSeconds
+                    playerTimes[playerName].totalTime = playerTimes[playerName].totalTime + timeDifference
+                end
+            end
+            playerTimes[playerName].lastActionTimestamp = timeInSeconds
         end
     end
-
+    
     return playerTimes
 end
 
 -- Converts milliseconds to hrs and mins
 function ConvertToHoursAndMinutes(ms)
-    local seconds = ms / 1000
-    
+    local seconds = ms
     --    Get hours and minutes from seconds
     local hours = math.floor(seconds / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
     
     return hours, minutes
-end
-
--- -----------------------------------------------------------------------------
--- Dict Handling Stuff
--- -----------------------------------------------------------------------------
-function CheckIfLeap()
-    -- Changes day to leap year.
-    if (((GetYear() % 4 == 0) and (GetYear() % 100 ~= 0)) or (GetYear() % 400 == 0)) then
-        calendarMD["February"] = 29
-    end
 end
 
 -- -----------------------------------------------------------------------------
@@ -67,15 +63,9 @@ function GetCurrentTime()
     return os.epoch("utc")
 end
 
--- Gets the year
-function GetYear()
-    return os.date("%Y")
-end
-
 -- -----------------------------------------------------------------------------
 -- Players With Largest Times
 -- -----------------------------------------------------------------------------
-
 
 -- Function to get the three players with the largest times
 function GetPlayersLargestTimes(playerTimes)
@@ -87,7 +77,7 @@ function GetPlayersLargestTimes(playerTimes)
     end
 
     -- Sort the list based on time in descending order
-    table.sort(playerTimeList, function(a, b) return a.time > b.time end)
+    table.sort(playerTimeList, function(a, b) return a.time.totalTime > b.time.totalTime end)
 
     -- Extract the three players with the largest times
     local largestPlayers = {}
@@ -106,38 +96,12 @@ function GetPlayersLargestTimes(playerTimes)
 
     return largestPlayers
 end
+
 -- -----------------------------------------------------------------------------
 -- Init Stuff
 -- -----------------------------------------------------------------------------
-
--- A lookup table containing number of days in a month
-calendarMD = {
-    ["January"] = 31,
-    ["February"] = 28,
-    ["March"] = 31,
-    ["April"] = 30,
-    ["May"] = 31,
-    ["June"] = 30,
-    ["July"] = 31,
-    ["August"] = 31,
-    ["September"] = 30,
-    ["October"] = 31,
-    ["November"] = 30,
-    ["December"] = 31
-}
-
--- Changes lookup table if leap year
-CheckIfLeap()
 
 -- Gets the total player time
 local time = CalculateTotalPlayerTime()
 -- Gets the top three players times
 topThree = GetPlayersLargestTimes(time)
-
-for i, playerInfo in ipairs(topThree) do
-    print(i .. ": " .. playerInfo.player .. " - " .. playerInfo.hours .. "hrs and " .. playerInfo.minutes .. "mins")
-end
-
-
--- every hour update
--- print top three to monitor
