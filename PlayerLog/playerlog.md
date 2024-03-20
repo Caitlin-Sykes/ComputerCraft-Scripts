@@ -12,11 +12,12 @@
 
 ## Introduction
 
-This script monitors players logging in and out, as well as keeping a written log at ```/logger/log.txt```
+This script monitors players logging in and out, as well as keeping a written log at ```/logger/log.txt``` It also displays the top three players in terms of playtime, at the top of the monitor.
 
 ## Features
 
 - **Player Logging Script**
+- **Top Three Players**
 - **Custom Colours for different players**
 
 ## Requirements
