@@ -57,9 +57,6 @@ function RefreshHourly()
     while true do
         DrawHeader()
         TopThreePrint()
-        file = fs.open("refresh.txt", "a")
-        file.writeLine("Refreshed at " .. TimeCalculator.GetCurrentTime()) 
-        file.close()
     -- Pause execution for one hour
     os.sleep(hourInSeconds)
     end
@@ -140,6 +137,8 @@ function PrintMonitor(text)
     local text_to_wrap = wrap(text, width)
     for k, v in pairs(text_to_wrap) do
         monitor.setTextColor(before_header)
+        monitor.setCursorPos(width, height)
+        monitor.write(" ")
         monitor.setCursorPos(1, height)
         monitor.scroll(1)
         monitor.write(rpad(v, width))
