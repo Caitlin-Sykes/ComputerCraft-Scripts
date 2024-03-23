@@ -69,7 +69,7 @@ to this:
 ["menu"] = colors.yellow
 ```
 
-makes ```-= Player Log=-``` to be yellow instead of orange.
+makes ```-=Player Log=-``` to be yellow instead of orange.
 
 
 
