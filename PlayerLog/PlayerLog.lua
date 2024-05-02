@@ -12,7 +12,7 @@ os.loadAPI("TimeCalculator.lua")
 -- -----------------------------------------------------------------------------
 
 -- Pads the monitor
-function rpad(s, l, c)
+function Rpad(s, l, c)
     local res = s .. string.rep(c or ' ', l - #s)
 
     return res, res ~= s
@@ -83,7 +83,7 @@ function OnPlayerLeave()
 end
 
 -- Waits for keypress to kill the program
-function waitForKeyPress()
+function WaitForKeyPress()
     while true do
       local event, key = os.pullEvent("key")
       if key == keys.q then
@@ -113,8 +113,8 @@ function DrawHeader()
 end
 
 -- https://www.computercraft.info/forums2/index.php?/topic/15790-modifying-a-word-wrapping-function/
--- Makes the monitor text wrap nicely
-function wrap(str, limit)
+-- Makes the monitor text Wrap nicely
+function Wrap(str, limit)
     local Lines, here, limit = {}, 1, limit or 72
     Lines[1] = string.sub(str, 1, str:find("(%s+)()(%S+)()") - 1) -- Put the first word of the string in the first index of the table.
 
@@ -134,24 +134,24 @@ end
 
 -- A function to print stuff to the monitor
 function PrintMonitor(text)
-    local text_to_wrap = wrap(text, width)
+    local text_to_wrap = Wrap(text, width)
     for k, v in pairs(text_to_wrap) do
         monitor.setTextColor(before_header)
         monitor.setCursorPos(width, height)
         monitor.write(" ")
         monitor.setCursorPos(1, height)
         monitor.scroll(1)
-        monitor.write(rpad(v, width))
+        monitor.write(Rpad(v, width))
     end
 end
 
 -- A function to print stuff to the monitor
 function PrintTopThree(text, pos)
-    local text_to_wrap = wrap(text, width)
+    local text_to_wrap = Wrap(text, width)
     for k, v in pairs(text_to_wrap) do
         monitor.setTextColor(before_header)
         monitor.setCursorPos(1, k + pos)
-        monitor.write(rpad(v, width))
+        monitor.write(Rpad(v, width))
         DrawHeader()
     end
 
@@ -214,7 +214,7 @@ end
 -- -----------------------------------------------------------------------------
 
 -- DEBUGGING
-function pickRandomString(strings)
+function PickRandomString(strings)
     local index = math.random(1, #strings)
     return strings[index]
 end
@@ -228,7 +228,7 @@ function LoginPlayer()
     -- Main loop
     while true do
     os.sleep(hourInSeconds)
-    PlayerJoin(pickRandomString({"TEST_User1", "TEST_User2", "TEST_User3", "TEST_User4"}))
+    PlayerJoin(PickRandomString({"TEST_User1", "TEST_User2", "TEST_User3", "TEST_User4"}))
     end
 end
 
@@ -237,7 +237,7 @@ end
 -- -----------------------------------------------------------------------------
 
 -- Gets the monitor that's adjacent
-monitor = peripheral.wrap("monitor_4")
+monitor = peripheral.Wrap("monitor_4")
 detector = peripheral.find("playerDetector")
 
 -- Dict for colours
@@ -263,4 +263,4 @@ TopThreePrint()
 
 
 -- Waits for any event
-parallel.waitForAny(OnPlayerJoin, OnPlayerLeave, RefreshHourly, waitForKeyPress, Blink)
+parallel.waitForAny(OnPlayerJoin, OnPlayerLeave, RefreshHourly, WaitForKeyPress, Blink)
