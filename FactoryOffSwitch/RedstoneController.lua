@@ -1,47 +1,55 @@
+-- Imports the Customisation
+os.loadAPI("/FactoryOffSwitch/Customisation.lua")
+
 -- -----------------------------------------------------------------------------
 -- On Logic
 -- -----------------------------------------------------------------------------
 
 -- Factory on
-    -- if resisitve heater, turn off
-        -- set energy usage to 0
-    -- redstone signal off
-    
-local function OnFactoryStart()
+function OnFactoryStart()
 
     -- If resistive heater is enabled
     -- set energy usage to 0
-    if (RESISTIVE_HEATER) then
+    if (Customisation.RESISTIVE_HEATER) then
+        heater = GetHeater()
         heater.setEnergyUsage(0)
     end
-    
-    
+
+    rs.setAnalogOutput(Customisation.REDSTONE_OUTPUT_COMPUTER, 0)
 end
+
 -- -----------------------------------------------------------------------------
 -- Off Logic
 -- -----------------------------------------------------------------------------
 
-
 -- factory shutdown
-    --   redstone signal on
-    --   wait a few seconds
-    --   turn on resistive heater if present
-        --   set energy usage to 1000
+function OnFactoryShutdown()
+    
+    rs.setAnalogOutput(Customisation.REDSTONE_OUTPUT_COMPUTER, 15)
 
-local function OnFactoryShutdown()
-
-
+    -- If resistive heater is enabled
+        -- set energy usage to 4000
+        if (Customisation.RESISTIVE_HEATER) then
+            heater = GetHeater()
+            heater.setEnergyUsage(4000)
+        end
 end
 
-
 -- -----------------------------------------------------------------------------
--- Init Stuff
+-- Misc Logic
 -- -----------------------------------------------------------------------------
 
--- Constants
-RESISTIVE_HEATER = true
+-- Checks whether on or not on boot
+function CheckOnOff()
+    -- If no redstone output, is running
+    if (rs.getOutput(Customisation.REDSTONE_OUTPUT_COMPUTER) == false) then
+        Customisation.FACTORY_STATUS = "RUNNING"
+    else
+        Customisation.FACTORY_STATUS = "STOPPED"
+    end
+end
 
--- Gets resistive heater if enabled
-if RESISTIVE_HEATER then
-    heater = peripheral.wrap("resistiveHeater"); 
+-- Get heater
+function GetHeater()
+    return peripheral.wrap("resistiveHeater_1"); 
 end

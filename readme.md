@@ -16,6 +16,7 @@ The following repository is a collection of small scripts that do various things
 ## Features
 
 - **Player Logging Script ¹**
+- **An On/Off Switch using Monitors**
 > [!note]  
 > Scripts marked with a ¹ should be chunkloaded
 
@@ -24,6 +25,10 @@ The following repository is a collection of small scripts that do various things
 1. **Player Logger**:
     - **Description**: This script currently keeps a record of players log in times and log out times, and writes this to a file. It also calculates the top three players in terms of play times, and displays them at the top of the monitor.
     - **Usage**: Install this script on a Computercraft computer. Run the script to start logging player activities.
+2. **An On/Off Switch using Monitors**:
+    - **Description**: This script currently displays two buttons on a monitor, and whether it is currently enabled or disabled. The user can right click on the buttons to toggle factory states. Power is controlled by the computer emitting redstone signals.
+    - **Usage**: Install this script on a Computercraft computer. Connect the computer to a monitor, and optionally, a resistive heater, to toggle the state of the factory.
+
 
 ## Installation
 
