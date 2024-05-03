@@ -23,8 +23,8 @@ This script is used to enable or disable a power source by emitting a redstone s
 1. Connect a computer to monitors, and optionally, a resistive heater.
    ![Step 1: Screenshot of the GUI and setup](assets/setup.png)
 2. Out of the back of the block- or whatever it is set to within ```Customisation.lua```, place some redstone, leading towards a wire.
-   > [!note]  
-   > This systems works best by using lower-tier cables, when using the resistive heater to drain power. You could also add more resistive heaters, though this script does not support that out of the box.
+  > [!NOTE]  
+  > This systems works best by using lower-tier cables, when using the resistive heater to drain power. You could also add more resistive heaters, though this script does not support that out of the box.
 3. Toggle redstone sensitivity for the wire by using a configurator.
    ![Step 2 & 3: Screenshot of the redstone and cables](assets/setupTwo.png)
 4. Now, when you right click the monitor, it should toggle between the power states.
