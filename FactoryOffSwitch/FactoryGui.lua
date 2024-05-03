@@ -213,6 +213,18 @@ function MonitorClick()
                 RedstoneController.OnFactoryShutdown()
                 FactoryStatusSmol()            
             end 
+        -- 4x3
+         elseif (width == 39 and height == 19) then
+            -- Start Button
+            if ((x>= 2 and x <= 17) and (y == 8 or y == 10)) then
+                Customisation.FACTORY_STATUS = "RUNNING"
+                RedstoneController.OnFactoryStart()
+                FactoryStatus()
+            elseif ((x>= 20 and x <= 38) and (y == 8 or y == 10)) then
+                Customisation.FACTORY_STATUS = "STOPPED"
+                RedstoneController.OnFactoryShutdown()
+                FactoryStatus()
+            end 
         end
     end
 end
