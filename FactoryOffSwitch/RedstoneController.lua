@@ -42,7 +42,7 @@ end
 -- Checks whether on or not on boot
 function CheckOnOff()
     -- If factory status == running, runs
-    if (rs.getOutput(Customisation.FACTORY_STATUS) == "RUNNING") then
+    if (Customisation.FACTORY_STATUS == "RUNNING") then
         Customisation.FACTORY_STATUS = "RUNNING"
         OnFactoryStart()
     -- Else off.
