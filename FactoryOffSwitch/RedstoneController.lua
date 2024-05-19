@@ -41,15 +41,18 @@ end
 
 -- Checks whether on or not on boot
 function CheckOnOff()
-    -- If no redstone output, is running
-    if (rs.getOutput(Customisation.REDSTONE_OUTPUT_COMPUTER) == false) then
+    -- If factory status == running, runs
+    if (rs.getOutput(Customisation.FACTORY_STATUS) == "RUNNING") then
         Customisation.FACTORY_STATUS = "RUNNING"
+        OnFactoryStart()
+    -- Else off.
     else
         Customisation.FACTORY_STATUS = "STOPPED"
+        OnFactoryShutdown()
     end
 end
 
 -- Get heater
 function GetHeater()
-    return peripheral.wrap("resistiveHeater_1"); 
+    return peripheral.wrap("resistiveHeater_4"); 
 end

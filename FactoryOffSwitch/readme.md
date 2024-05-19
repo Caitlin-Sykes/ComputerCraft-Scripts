@@ -13,6 +13,7 @@
     - [Removing the Blinking Indicator](#removing-the-blinking-indicator)
     - [Drain the Power from the circuit using a resistive heater](#drain-the-power-from-the-circuit-using-a-resistive-heater)
     - [Change where the redstone is outputted from the computer.](#change-where-the-redstone-is-outputted-from-the-computer)
+    - [Auto Start](#auto-start)
 
 ## Introduction
 
@@ -74,3 +75,7 @@ To disable this, change "RESISTIVE_HEATER" in ```Customisation.lua``` to ```fals
 ### Change where the redstone is outputted from the computer.
 
 To change this, change "REDSTONE_OUTPUT_COMPUTER" in ```Customisation.lua``` to a direction, (Top, Back, etc).
+
+### Auto Start
+
+To change whether the factory starts switched on, or off, in ```Customisation.lua``` change "FACTORY_STATUS" to "SHUTDOWN" or "RUNNING" dependent on what you want. It is set to running by default.

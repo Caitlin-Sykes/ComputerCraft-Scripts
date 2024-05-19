@@ -11,7 +11,8 @@ TITLE_COLOUR = colors.purple
 BLINK_COLOUR = colors.orange
 FACTORY_STATUS_COLOUR = colors.white
 
--- DON'T MESS WITH THESE
+-- "SHUTDOWN" for starts turned off
+-- "RUNNING" for starts turned on
 FACTORY_STATUS = "RUNNING"
 
 -- Enable/disable resisitive heater
