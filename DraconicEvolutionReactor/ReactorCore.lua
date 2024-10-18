@@ -165,8 +165,12 @@ function GetNextLogFile()
         end
     end
 
-    -- Sort log files based on their names (oldest first)
-    table.sort(logFiles)
+    -- Custom sort function to sort log files based on the number in their name
+    table.sort(logFiles, function(a, b)
+        local aNum = tonumber(a:match("%d+")) or 0
+        local bNum = tonumber(b:match("%d+")) or 0
+        return aNum < bNum  -- Sort by log file number
+    end)
 
     -- If no log files exist, create the first one
     if #logFiles == 0 then
@@ -175,7 +179,7 @@ function GetNextLogFile()
     end
 
     -- Determine the current log file to write to
-    local currentLogFile = logFiles[#logFiles]  -- Get the last log file in the list
+    local currentLogFile = logFiles[#logFiles]  -- Get the last log file (newest)
     local currentLogFilePath = fs.combine(Customisation.LOG_FILE_DIRECTORY, currentLogFile)
 
     -- Check if the current log file exceeds the size limit
@@ -188,12 +192,15 @@ function GetNextLogFile()
         if #logFiles >= Customisation.NUMBER_TO_KEEP then
             local oldestLog = logFiles[1]  -- Get the oldest log file
             fs.delete(fs.combine(Customisation.LOG_FILE_DIRECTORY, oldestLog))
-            print("Deleted oldest log file: " .. oldestLog)
+            msg = ("Deleted oldest log file: " .. oldestLog)
+            print(msg)
+            LogMessage(msg, "[INFO]")
         end
     end
 
     -- Return the full path to the current log file
     return fs.combine(Customisation.LOG_FILE_DIRECTORY, currentLogFile)
+
 end
 
 -- Function to write the log file header
@@ -261,6 +268,15 @@ end
 
 function ReactorCore:GetInputFlux()
     return inputFlux
+end
+
+-- Setter methods to provide access to the peripherals from outside
+function ReactorCore:SetOutputFlux(num)
+     outputFlux.setSignalLowFlow(num)
+end
+
+function ReactorCore:SetInputFlux(num)
+    inputFlux.setSignalLowFlow(num)
 end
 
 return ReactorCore

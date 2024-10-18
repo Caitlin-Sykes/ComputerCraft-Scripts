@@ -170,6 +170,75 @@ function RefreshScreen()
 end
 
 -- -----------------------------------------------------------------------------
+-- Automatic Monitoring Stuff
+-- -----------------------------------------------------------------------------
+
+-- Function to automatically adjust energy output
+function AutomaticEnergyAdjustment()
+
+    -- Continuously monitor the reactor
+    while Customisation.AUTOMATIC_MONITORING do
+
+        -- Get the reactor's current field generation and output flux
+        local reactorInfo = ReactorCore:GetReactorInfo()
+        local outputFluxObj = ReactorCore:GetOutputFlux()
+        local fieldGeneration = reactorInfo.fieldStrength
+
+        -- Iterate through the defined increments
+        for _, increment in ipairs(Customisation.INCREMENTS) do
+
+            -- Fetch the current output flux before each adjustment
+            outputFluxObj = ReactorCore:GetOutputFlux()
+            local currentOutputFlux = outputFluxObj.getSignalLowFlow()
+
+            -- Increase the output gate by the current increment
+            local newOutputFlux = currentOutputFlux + increment
+            ReactorCore:SetOutputFlux(newOutputFlux)
+            local msg = "Increased output gate by " .. increment .. ". New output flux: " .. newOutputFlux
+            
+            print(msg)
+            if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error") then
+                LogMessage(msg, "[INFO]")
+            end
+
+            -- Wait for the defined interval, checking safety every couple of seconds
+            local elapsedTime = 0
+            while elapsedTime < Customisation.WAIT_INTERVAL do
+                -- Check the current field generation after the increase
+                reactorInfo = ReactorCore:GetReactorInfo()
+                fieldGeneration = reactorInfo.fieldStrength
+
+                -- If the field generation is not safe, stop increasing the output gate
+                if fieldGeneration < Customisation.KILL_FIELD_PERCENT then
+                    local errorMsg = "Field generation below safe threshold! Output gate increase halted."
+                    print(errorMsg)
+                    if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "error") then
+                        LogMessage(errorMsg, "[ERROR]")
+                        -- Attempts to recover it
+                        RecoverFieldGeneration(reactorInfo, ReactorCore:GetInputFlux().getSignalLowFlow())
+                    end
+                    return -- Stop the adjustment process if field is unsafe
+                end
+
+                -- Wait for the safety check interval before checking again
+                os.sleep(Customisation.SAFETY_INTERVAL)
+                elapsedTime = elapsedTime + Customisation.SAFETY_INTERVAL
+            end
+        end
+
+        -- After completing all increments, wait before starting the cycle again
+        local cycleCompleteMsg = "Completed output gate cycle. Waiting before restarting."
+        print(cycleCompleteMsg)
+        if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error") then
+            LogMessage(cycleCompleteMsg, "[INFO]")
+        end
+
+        -- Wait for the cycle reset interval before restarting
+        os.sleep(Customisation.ADJUST_INTERVAL)
+    end
+end
+
+-- -----------------------------------------------------------------------------
 -- Init Stuff
 -- -----------------------------------------------------------------------------
 
@@ -192,4 +261,4 @@ if Customisation.ENABLE_LOGGING then
 end
 
 -- Main loop
-parallel.waitForAll(CheckReactorStatus, CheckTemperature, CheckPowerGen, CheckInputGate, CheckOutputGate, CheckFuel, CheckField, RefreshScreen)
+parallel.waitForAll(CheckReactorStatus, CheckTemperature, CheckPowerGen, CheckInputGate, CheckOutputGate, CheckFuel, CheckField, AutomaticEnergyAdjustment, RefreshScreen)

@@ -66,10 +66,10 @@ function ShieldKillSwitch(shield, reactorStatus)
         print(msg)
         reactor.stopReactor()
         reactor.chargeReactor()
-           
-        -- Rams the input flux gate with tons of energy to try and rescue it 
-        local iFluxGate = ReactorCore:GetInputFlux()
-        inputfluxgate.setSignalLowFlow(900000)
+        
+        -- Recovers Field Generation
+        RecoverFieldGeneration(ReactorCore:GetReactorInfo(), ReactorCore:GetInputFlux())
+
     elseif shield <= Customisation.MIN_FIELD_PERCENT and reactorStatus == "online" then
         msg = "WARNING: Reactor generation field has hit the warning threshold..."
         print(msg)
@@ -87,6 +87,55 @@ function ShieldKillSwitch(shield, reactorStatus)
     if Customisation.USE_ENDER_MODEM and msg ~= nil then
         ReactorCore:SendEnderModemMessage(msg)
         msg = nil
+    end
+end
+
+-- Function to recover field generation by adjusting the input gate
+function RecoverFieldGeneration(reactorInfo, inputFlux)
+    local fieldGeneration = reactorInfo.fieldGeneration
+
+    -- Store the original input flux if it's not already stored
+    if not originalInputFlux then
+        originalInputFlux = inputFlux
+    end
+
+    -- Check if field generation is still below the safe threshold
+    if reactorInfo.fieldGeneration < Customisation.MIN_FIELD_PERCENT then
+        -- Increase the input flux to recover field generation
+        ReactorCore:SetInputFlux(9000000)
+        msg = ("Increased input flux to 9000000")
+
+        print(msg)
+
+        -- Logs Errors and Info
+        if (Customisation.ENABLE_LOGGING) then
+                LogMessage(msg, "[INFO]")
+        end
+
+        -- Wait for the field to recover
+        while reactorInfo.fieldGeneration < Customisation.MIN_FIELD_PERCENT do
+            -- Keep checking the field generation until it recovers
+            os.sleep(Customisation.FIELD_CHECK_INTERVAL)
+            reactorInfo = ReactorCore:GetReactorInfo()
+        end
+
+        -- Once recovered, reset the input flux to its original value
+        ReactorCore:SetInputFlux(originalInputFlux)
+        msg = ("Field recovered. Resetting input flux to original value: " .. originalInputFlux)
+        print(msg)
+         -- Logs Errors and Info
+        if (Customisation.ENABLE_LOGGING) then
+                LogMessage(msg, "[INFO]")
+        end
+
+    else
+        -- If the field generation recovered during the wait, do nothing
+        msg = ("Field generation recovered on its own. No input flux adjustment needed.")
+         print(msg)
+         -- Logs Errors and Info
+        if (Customisation.ENABLE_LOGGING) then
+                LogMessage(msg, "[INFO]")
+        end
     end
 end
 
@@ -127,5 +176,6 @@ end
 return {
     TemperatureKillSwitch = TemperatureKillSwitch,
     FuelKillSwitch = FuelKillSwitch,
-    ShieldKillSwitch = ShieldKillSwitch
+    ShieldKillSwitch = ShieldKillSwitch,
+    RecoverFieldGeneration = RecoverFieldGeneration
 }

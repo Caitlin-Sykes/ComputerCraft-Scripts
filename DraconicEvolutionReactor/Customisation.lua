@@ -71,6 +71,22 @@ Customisation.ENABLE_SAFETY = true
 Customisation.ENDER_MODEM_MESSAGE_TIMEOUT = 5 
 Customisation.ENABLE_LOGGING = true;
 
+-- -----------------------------------------------------------------------------
+-- Automatic Monitoring Settings
+-- -----------------------------------------------------------------------------
+
+-- RECOVERY_TIMEOUT - how long the reactor will attempt to wait for an auto recover, before it manually recovers
+-- if after the timeout, its still dangerously low, takes emergency measures
+-- INCREMENTS - the periods by which the output gate increases
+-- WAIT_INTERVAL - how long it waits before increasing again
+-- SAFETY_INTERVAL - how many seconds in the wait interval it checks the field generation. Ie, if this is five, and WAIT_INTERVAL is 2, every five seconds of the two minutes
+-- ADJUST_INTERVAL - how long it waits before restarting the output cycle gate again
+Customisation.RECOVERY_TIMEOUT = 120
+Customisation.INPUT_INCREMENT = 1
+Customisation.INCREMENTS = {1000, 10000, 1000000}
+Customisation.WAIT_INTERVAL = 240 -- 4 mins
+Customisation.SAFETY_INTERVAL = 5
+Customisation.ADJUST_INTERVAL = 300 -- 5 mins
 
 -- -----------------------------------------------------------------------------
 -- Ender Modem Settings
