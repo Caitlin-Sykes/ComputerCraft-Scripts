@@ -270,6 +270,9 @@ function ReactorCore:GetInputFlux()
     return inputFlux
 end
 
+function ReactorCore:GetOutputFluxVal()
+    return outputFlux.getSignalLowFlow()
+end
 -- Setter methods to provide access to the peripherals from outside
 function ReactorCore:SetOutputFlux(num)
      outputFlux.setSignalLowFlow(num)

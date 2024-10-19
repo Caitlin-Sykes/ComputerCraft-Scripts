@@ -60,47 +60,50 @@ end
 function ShieldKillSwitch(shield, reactorStatus)
     local msg = nil
     local reactor = ReactorCore:GetReactor()
-
-    if shield <= Customisation.KILL_FIELD_PERCENT and reactorStatus == "online" then
+    
+    if shield <= Customisation.KILL_FIELD_PERCENT then
         msg = "WARNING: Reactor has too low of a containment field... Stopping the reactor..."
         print(msg)
         reactor.stopReactor()
         reactor.chargeReactor()
         
         -- Recovers Field Generation
-        RecoverFieldGeneration(ReactorCore:GetReactorInfo(), ReactorCore:GetInputFlux())
+        RecoverFieldGeneration(ReactorCore:GetFieldPercentageRemaining(), ReactorCore:GetInputFlux())
 
-    elseif shield <= Customisation.MIN_FIELD_PERCENT and reactorStatus == "online" then
+    elseif shield <= Customisation.MIN_FIELD_PERCENT then
         msg = "WARNING: Reactor generation field has hit the warning threshold..."
+        print(msg)
+    
+    else
+        msg = "Reactor Containment is healthy"
         print(msg)
     end
     
 
-     -- Logs Errors and Info
+    -- Logs Errors and Info
     if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "info" and msg ~= nil) then
-            LogMessage(msg, "[ERROR]")
-    elseif (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "info" and msg == nil) then
-            LogMessage("Reactor Containment is healthy", "[INFO]")
+            LogMessage(msg, "[DEBUG]")
     end
 
     -- If using ender modem, send the message
     if Customisation.USE_ENDER_MODEM and msg ~= nil then
         ReactorCore:SendEnderModemMessage(msg)
-        msg = nil
     end
+
+    msg = nil
+
 end
 
 -- Function to recover field generation by adjusting the input gate
-function RecoverFieldGeneration(reactorInfo, inputFlux)
-    local fieldGeneration = reactorInfo.fieldGeneration
-
+function RecoverFieldGeneration(shield, inputFlux)  
     -- Store the original input flux if it's not already stored
     if not originalInputFlux then
-        originalInputFlux = inputFlux
+        originalInputFlux = ReactorCore:GetInputFluxVal()
     end
 
+
     -- Check if field generation is still below the safe threshold
-    if reactorInfo.fieldGeneration < Customisation.MIN_FIELD_PERCENT then
+    if shield < Customisation.MIN_FIELD_PERCENT then
         -- Increase the input flux to recover field generation
         ReactorCore:SetInputFlux(9000000)
         msg = ("Increased input flux to 9000000")
@@ -113,10 +116,10 @@ function RecoverFieldGeneration(reactorInfo, inputFlux)
         end
 
         -- Wait for the field to recover
-        while reactorInfo.fieldGeneration < Customisation.MIN_FIELD_PERCENT do
+        while shield < Customisation.MIN_FIELD_PERCENT do
             -- Keep checking the field generation until it recovers
             os.sleep(Customisation.FIELD_CHECK_INTERVAL)
-            reactorInfo = ReactorCore:GetReactorInfo()
+            shield = ReactorCore:GetFieldPercentageRemaining()
         end
 
         -- Once recovered, reset the input flux to its original value
@@ -156,7 +159,7 @@ function FuelKillSwitch(fuel)
         print(msg)
     end
 
-     -- Logs Errors and Info
+    -- Logs Errors and Info
     if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "info" and msg ~= nil) then
             LogMessage(msg, "[ERROR]")
     elseif (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "info" and msg == nil) then
@@ -169,6 +172,7 @@ function FuelKillSwitch(fuel)
         msg = nil
     end
 end
+
 
 -- -----------------------------------------------------------------------------
 -- Return the Safety Module

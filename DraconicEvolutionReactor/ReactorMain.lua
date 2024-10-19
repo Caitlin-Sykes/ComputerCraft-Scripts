@@ -150,8 +150,11 @@ function CheckField()
             ReactorGui.UpdateFieldDisplay(fieldRemaining)
         end
 
-        -- Calls the safeties
-        ReactorSafeties.ShieldKillSwitch(fieldRemaining, reactorInfo.status)
+        if (Customisation.ENABLE_SAFETY) then
+            -- Check the Temperature against the safeties
+            ReactorSafeties.ShieldKillSwitch(fieldRemaining, reactorInfo.status)
+        end
+  
 
         -- Log to Computer
         print("Field Remaining: " .. fieldRemaining)
@@ -177,7 +180,7 @@ end
 function AutomaticEnergyAdjustment()
 
     -- Continuously monitor the reactor
-    while Customisation.AUTOMATIC_MONITORING do
+    while Customisation.AUTOMATIC_MONITORING and ReactorCore:GetOutputFluxVal() < Customisation.MAX_INCREASE_THRESHOLD do
 
         -- Get the reactor's current field generation and output flux
         local reactorInfo = ReactorCore:GetReactorInfo()
@@ -205,6 +208,7 @@ function AutomaticEnergyAdjustment()
             local elapsedTime = 0
             while elapsedTime < Customisation.WAIT_INTERVAL do
                 -- Check the current field generation after the increase
+                print(elapsedTime)
                 reactorInfo = ReactorCore:GetReactorInfo()
                 fieldGeneration = reactorInfo.fieldStrength
 
@@ -215,7 +219,7 @@ function AutomaticEnergyAdjustment()
                     if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "error") then
                         LogMessage(errorMsg, "[ERROR]")
                         -- Attempts to recover it
-                        RecoverFieldGeneration(reactorInfo, ReactorCore:GetInputFlux().getSignalLowFlow())
+                        RecoverFieldGeneration(ReactorCore:GetFieldPercentageRemaining(), ReactorCore:GetInputFlux().getSignalLowFlow())
                     end
                     return -- Stop the adjustment process if field is unsafe
                 end
@@ -227,7 +231,7 @@ function AutomaticEnergyAdjustment()
         end
 
         -- After completing all increments, wait before starting the cycle again
-        local cycleCompleteMsg = "Completed output gate cycle. Waiting before restarting."
+        local cycleCompleteMsg = "Completed output gate cycle. Waiting .. " .. Customisation.ADJUST_INTERVAL .. "before restarting."
         print(cycleCompleteMsg)
         if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error") then
             LogMessage(cycleCompleteMsg, "[INFO]")
