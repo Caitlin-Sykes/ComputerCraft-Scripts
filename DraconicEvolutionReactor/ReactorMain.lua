@@ -180,7 +180,7 @@ end
 function AutomaticEnergyAdjustment()
 
     -- Continuously monitor the reactor
-    while Customisation.AUTOMATIC_MONITORING and ReactorCore:GetOutputFluxVal() < Customisation.MAX_INCREASE_THRESHOLD do
+    while Customisation.AUTOMATIC_MONITORING and ReactorCore:GetFieldPercentageRemaining() > Customisation.MIN_FIELD_PERCENT and ReactorCore:GetOutputFluxVal() < Customisation.MAX_INCREASE_THRESHOLD do
 
         -- Get the reactor's current field generation and output flux
         local reactorInfo = ReactorCore:GetReactorInfo()
