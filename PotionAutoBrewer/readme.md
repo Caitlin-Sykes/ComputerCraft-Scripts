@@ -25,6 +25,7 @@
       - [After](#after-1)
     - [Changing Timers for Specific Mods](#changing-timers-for-specific-mods)
     - [Adding More Chest Clusters](#adding-more-chest-clusters)
+  - [Supported Mods:](#supported-mods)
 
 
 ## Introduction
@@ -243,6 +244,24 @@ It is worth noting that the Cluster_Name does not matter, it can be whatever you
         ["cable"] = [COLOUR]
     }
 ```
+
+Repeat the steps from [Instructions](#instructions), but minus the computer and CC Bridge. They can just be connected via a wired cable. 
+
+## Supported Mods:
+- Vanilla Minecraft
+- Corail Tombstone
+- Apotheosis
+- IronsSpellbooks
+- Ecologics
+- ArsNouveau
+- ArsElemental
+- Railcraft (Disabled by Default, disabled within KubeJS)
+- Eidolon
+- Naturalist
+- PotionsMaster
+- DeeperDarker
+- Autumnity
+- Quark
 
 
 
