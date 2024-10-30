@@ -4,9 +4,10 @@
 - [Factory On-Off Switch](#factory-on-off-switch)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
-  - [Instructions](#instructions)
   - [Features](#features)
   - [Requirements](#requirements)
+  - [Instructions](#instructions)
+    - [Steps:](#steps)
   - [Example Display](#example-display)
   - [Customisation](#customisation)
     - [Custom GUI Colours](#custom-gui-colours)
@@ -19,7 +20,25 @@
 
 This script is used to enable or disable a power source by emitting a redstone signal when a button on a monitor is pressed.
 
+## Features
+
+- **On/Off Switch**
+- **Customisation**
+- **Optional Power Drain Circuit**
+
+## Requirements
+
+- **3x3 Monitor**
+> [!NOTE]   
+> Though designed for a 3x3 monitor, the script does work on monitors of varying dimensions.
+  
 ## Instructions
+> ⚠️ **Note:** At the top of each script, remember to change the path. Ie, any `require` will need to be changed unless your code is within a folder called `ReactorMonitoring`. An example of a line to change is below:  
+> 
+> ```
+> os.loadAPI("/FactoryOffSwitch/Customisation.lua")
+
+### Steps:
 
 1. Connect a computer to monitors, and optionally, a resistive heater.
    ![Step 1: Screenshot of the GUI and setup](assets/setup.png)
@@ -30,18 +49,6 @@ This script is used to enable or disable a power source by emitting a redstone s
    ![Step 2 & 3: Screenshot of the redstone and cables](assets/setupTwo.png)
 4. Now, when you right click the monitor, it should toggle between the power states.
    ![Step 4: Screenshot of the factory in shutdown mode.](assets/working.png)
-
-## Features
-
-- **On/Off Switch**
-- **Customisation**
-- **Optional Power Drain Circuit**
-
-## Requirements
-
-- **3x3 Monitor**
-> [!note]  
-> Though designed for a 3x3 monitor, the script does work on monitors of varying dimensions.
 
 ## Example Display
 ![Screenshot of the GUI, showing the menu to interact with the factory in a 3x3 format.](assets/demo3x3.png)

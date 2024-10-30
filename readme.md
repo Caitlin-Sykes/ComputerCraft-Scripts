@@ -28,6 +28,9 @@ The following repository is a collection of small scripts that do various things
 2. **An On/Off Switch using Monitors**:
     - **Description**: This script currently displays two buttons on a monitor, and whether it is currently enabled or disabled. The user can right click on the buttons to toggle factory states. Power is controlled by the computer emitting redstone signals.
     - **Usage**: Install this script on a Computercraft computer. Connect the computer to a monitor, and optionally, a resistive heater, to toggle the state of the factory.
+3. **Potion Autobrewer:**
+   - **Description:** This script uses recipes within your AE2 network to craft potions using the Create mixer. This is done by creating new versions of the potions that can be transferred back into the vanilla counterparts by filling them using Create.
+   - **Usage**: Install this script to a computer. You will then have to follow the setup process within the ReadMe in order to have this work successfully. 
 
 
 ## Installation
