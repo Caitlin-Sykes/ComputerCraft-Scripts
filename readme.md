@@ -17,6 +17,7 @@ The following repository is a collection of small scripts that do various things
 
 - **Player Logging Script ¹**
 - **An On/Off Switch using Monitors**
+- **A Potion Autobrewer using AE2**
 > [!note]  
 > Scripts marked with a ¹ should be chunkloaded
 

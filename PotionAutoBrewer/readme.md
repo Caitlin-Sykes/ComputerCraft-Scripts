@@ -20,6 +20,7 @@
       - [CUSTOMISATION](#customisation-1)
         - [Before:](#before)
         - [After:](#after)
+    - [Adding Items:](#adding-items)
     - [Disabling Potions](#disabling-potions)
       - [Before](#before-1)
       - [After](#after-1)
@@ -64,7 +65,7 @@ This script is used to allow AE2 to autocraft potions using Create and export to
 2. You will know if you have done this right as if you type @KubeJS in JEI, there should be various potions available within the page, like "long liquid slowness potion"
 
 ### Setting up Things:
-1. Get a basin, mixer, chest, two funnels, a blaze burner and a belt and set them up in a similar way to this. The blaze burner must constantly have lava and the pipe coming off the left will need to filter back into the ME. I use Pipez for their internal filter slots, but anything works.
+1. Get a basin, mixer, chest, two funnels, a blaze burner and a belt and set them up in a similar way to this. The blaze burner must constantly have lava. 
 
 ![Setting up create](assets/CreateSetup.png)
 
@@ -79,19 +80,21 @@ This script is used to allow AE2 to autocraft potions using Create and export to
 ![Added the power and beginnings of a kill switch.](assets/CreateSetup3.png)
 
 ### Computer and Peripherals:
-1. Place down your computer, you're going to need quite a bit of space. Attach a modem to your computer, then attach that to the basin and the chest. To this cable run (or the computer), also attach an ME Bridge, unless there is already one on your network.
+1. Place down your computer, you're going to need quite a bit of space. Attach a modem to your computer, then attach that to the basin and the chest. To this cable run (or the computer), also attach an ME Bridge, unless there is already one on your network. To your ME Bridge, connect your ME network, as well as the pattern provider. As long as they are all connected to the network, it shouldn't matter exactly how.
 
 ![Connected the modems to the computer.](assets/ComputerStage.png)
 
-2. To your ME Bridge, connect your ME network, as well as the pattern provider. As long as they are all connected to the network, it shouldn't matter exactly how.
+2. Off one side of the computer, attach some bundled cable. This is configurable within ```Customisation.lua```. From this main run of bundled cable, attach different colours insulated wires, running into a block. Attach red alloy to the block.
 
-![Connect the ME, Bridge and Pattern Provider to one another.](assets/ComputerStage2.png)
+![Added the bundled cables and wires.](assets/ComputerStage2.png)
 
-3. Off one side of the computer, attach some bundled cable. This is configurable within ```Customisation.lua```. From this main run of bundled cable, attach different colours insulated wires, running into a block. Attach red alloy to the block.
-4. On the opposite side of the blocks that have wires running into them, attach a redstone torch, and one line of dust. Then in front of this, add a redstone link set to "send signal".
-5. In front of the pipe which powers your Create logic, add a redstone link with the same frequency, set to receive. Once placed, your cable should be set to not be transferring energy any more.
+3. On the opposite side of the blocks that have wires running into them, attach a redstone torch, and one line of dust. Then in front of this, add a redstone link set to "send signal".
+
+![Redstone torches and links added to circuit](assets/ComputerStage3.png)
    
-![Connected the power toggle mechanism.](assets/ComputerStage3.png)
+4. In front of the pipe which powers your Create logic, add a redstone link with the same frequency, set to receive. Once placed, your cable should be set to not be transferring energy any more.
+   
+![Adding the corresponding wired cable.](assets/ComputerStage4.png)
 
 > [!NOTE]   
 > Each different colour of wire represents a different cluster. So red = cluster 1, black = 2, etc. 
@@ -117,11 +120,11 @@ This script is used to allow AE2 to autocraft potions using Create and export to
 Fill out the following in the **me_friendly_potions_server.js**, where the **[name_of_potion]** is what the potion is, the **[item_to_craft_with]** is the ingredient used to make the potion, **[base_potion]** is what you add your ingredient to, to make the fluid (eg, awkward potion) and **[mod_name_as_appears_in_jei]** is how the mod the potion is from appears in JEI, etc (e.g, minecraft for minecraft potions, Corail Tombstone for Corail Tombstone potions).
 
 ```js 
-['[name_of_potion]', { item: '[item_to_craft_with]' }, { amount: 330, fluid: "[base_potion]", mod:"[mod_name_as_appears_in_jei]" }],
+['[name_of_potion]', { item: '[item_to_craft_with]' }, { amount: 1000, fluid: "[base_potion]", mod:"[mod_name_as_appears_in_jei]" }],
 ```
 
 ```js
-['night_vision', { item: 'minecraft:golden_carrot' }, { amount: 330, fluid: "kubejs:awkward", mod:"minecraft"}],
+['night_vision', { item: 'minecraft:golden_carrot' }, { amount: 1000, fluid: "kubejs:awkward", mod:"minecraft"}],
 ```
 
 > [!NOTE]   
@@ -149,7 +152,7 @@ You can either add a new list (the beginning of the code block to the end, in wh
 ```lua
 Potions.[MOD] = { 
     { 
-        potion = "[NAME OF THE POTION TO BE CRAFTED]", 
+        result = "[NAME OF THE POTION TO BE CRAFTED]", 
         base_potion = "[BASE POTION]", 
         ingredient = "[INGREDIENT USED TO CRAFT]",
     }, 
@@ -159,7 +162,7 @@ Potions.[MOD] = {
 ```lua
     Potions.BASE_POTIONS = { 
     { 
-        potion = "kubejs:night_vision", 
+        result = "kubejs:night_vision", 
         base_potion = "kubejs:awkward", 
         ingredient = "minecraft:golden_carrot",
     }, 
@@ -171,12 +174,12 @@ Potions.[MOD] = {
 
 Fill out the following in the **PotionsMain.lua**. Though the name of the function doesn't matter, normally I follow the convention of [MODNAME] being the mod the potions are coming from. As long as the name isn't already used, it doesn't matter what its called.
 
-Replace [MOD] with the name of your list you created in the previous step.
+Replace [MOD] with the name of your list you created in the previous step. Replace type with what you are making: it is either a "item" (for alloys, etc) or a "potion" for potions etc.
  
 ```lua
 function LookFor[MODNAME]()
     while true do
-        PotionsCore:SearchAndStartCrafting(Potions.[MOD])
+        PotionsCore:SearchAndStartCrafting(Potions.[MOD], [TYPE])
         sleep(Customisation.[MODNAME])
     end
 end
@@ -185,7 +188,7 @@ end
 ```lua
 function LookForPotionsBase()
     while true do
-        PotionsCore:SearchAndStartCrafting(Potions.BASE_POTIONS)
+        PotionsCore:SearchAndStartCrafting(Potions.BASE_POTIONS, "potion")
         sleep(Customisation.[MODNAME])
     end
 end
@@ -211,6 +214,23 @@ Within **Customisation.lua**, under **timers**, add the contents of the brackets
 
 ```lua
     Customisation.BASE_POTIONS_WAIT_FOR_SCAN = 60
+```
+
+### Adding Items:
+To add more items, you want to repeat the following steps, as you would if you were adding potions: [1](#potions), [2](#potionsmain) and [3](#customisation-1), but in the ```Items.lua``` class instead. Instead of a ```base_potion``` field, you will have ```ingredient = {}``` in which you need to list the items needed for your item, for example, if I was making void steel:
+
+```lua
+-- Vanilla Potions Base 
+Items.CREATE_UTILITIES_ITEMS = { 
+    { 
+        -- Void Steel Ingot
+        result = "createutilities:void_steel_ingot", 
+        ingredient = {"minecraft:netherite_ingot", "minecraft:ender_pearl"},
+    }
+}
+
+You also need to write down the exact number of items neccessary, e.g, if there are three ender pearls, write "minecraft:ender_pearl" three times in the list.
+
 ```
 
 ### Disabling Potions
@@ -263,5 +283,6 @@ Repeat the steps from [Instructions](#instructions), but minus the computer and 
 - Autumnity
 - Quark
 
-
-
+## FAQ
+### Do I know the belts are pointless since CC also moves the items?
+Yes. I'm just an idiot. But I liked the design more and it doesn't break anything by having them there. 
