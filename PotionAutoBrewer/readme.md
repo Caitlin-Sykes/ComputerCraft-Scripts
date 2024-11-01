@@ -27,6 +27,8 @@
     - [Changing Timers for Specific Mods](#changing-timers-for-specific-mods)
     - [Adding More Chest Clusters](#adding-more-chest-clusters)
   - [Supported Mods:](#supported-mods)
+  - [FAQ](#faq)
+    - [Do I know the belts are pointless since CC also moves the items?](#do-i-know-the-belts-are-pointless-since-cc-also-moves-the-items)
 
 
 ## Introduction

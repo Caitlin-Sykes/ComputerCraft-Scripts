@@ -32,6 +32,8 @@ The following repository is a collection of small scripts that do various things
 3. **Potion Autobrewer:**
    - **Description:** This script uses recipes within your AE2 network to craft potions using the Create mixer. This is done by creating new versions of the potions that can be transferred back into the vanilla counterparts by filling them using Create.
    - **Usage**: Install this script to a computer. You will then have to follow the setup process within the ReadMe in order to have this work successfully. 
+4. **Random Utility Scripts**
+   - **Description:** A series of random utility scripts that are small and serve a very specific purpose.
 
 
 ## Installation
