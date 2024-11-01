@@ -103,9 +103,8 @@ local function CheckIfItemIsBeingCrafted(potion)
 end
 
 -- Goes through a provided potionList, and checks whether its being crafted
-function PotionsCore:SearchAndStartCrafting(potionList)
+function PotionsCore:SearchAndStartCraftingPotions(potionList)
 
-    local cur_output = redstone.getBundledOutput(Customisation.BUNDLED_CABLE_SIDE)
     -- For every potion in the given potion list
     for _, potion in pairs(potionList) do
 
@@ -127,8 +126,22 @@ function PotionsCore:SearchAndStartCrafting(potionList)
                 -- Turn on the Create cluster
                 cur_output = colours.combine(cur_output, chest_cluster.cable)
 
+                -- Turn on Power
+                local cur_output = redstone.getBundledOutput(Customisation.BUNDLED_CABLE_SIDE)
+
                 -- Craft the potion
                 PotionsCore:PotionCrafting(potion, chest_cluster)
+
+                -- Wait for potion to appear in the basin, so it can export it to ME
+                while not IsPotionInBasin(potion.potion, chest_cluster.basin) do
+                    sleep(1)
+                end
+
+                -- Imports fluid from the basin
+                ME.importFluidFromPeripheral({
+                    name = potion.potion
+                }, chest_cluster.basin)
+
             end
 
             -- If crafted is not false, it must be an id, and if its got a crafting recipe, still crafting
@@ -145,6 +158,16 @@ function PotionsCore:SearchAndStartCrafting(potionList)
             -- Craft the potion
             PotionsCore:PotionCrafting(potion, chest_cluster)
 
+            -- Wait for potion to appear in the basin, so it can export it to ME
+            while not IsPotionInBasin(potion.potion, chest_cluster.basin) do
+                sleep(1)
+            end
+
+            -- Imports fluid from the basin
+            ME.importFluidFromPeripheral({
+                name = potion.potion
+            }, chest_cluster.basin)
+
             -- Else if it takes up a chest but does not have an active recipe, reset
         elseif (crafted ~= false) then
             -- Resets to idle
@@ -153,6 +176,7 @@ function PotionsCore:SearchAndStartCrafting(potionList)
 
             -- Turn off the cluster
             cur_output = colours.subtract(cur_output, chest_to_reset.cable)
+            local cur_output = redstone.getBundledOutput(Customisation.BUNDLED_CABLE_SIDE)
 
         end
     end
@@ -186,6 +210,19 @@ function AssignChest(potion)
             end
         else
             print("Cannot find chest by the id: " .. chest.id)
+        end
+    end
+    return false
+end
+
+-- Check if the potion is in the basin
+function IsPotionInBasin(potionName, basinId)
+    local basin = peripheral.wrap(basinId)
+    if basin then
+        for _, fluid in pairs(basin.tanks()) do
+            if fluid.name == potionName then
+                return true
+            end
         end
     end
     return false
