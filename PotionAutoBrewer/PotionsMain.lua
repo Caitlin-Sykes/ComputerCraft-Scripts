@@ -144,5 +144,7 @@ end
 PotionsCore:SetupPeripherals()
 
 -- Main loop
-parallel.waitForAll(LookForVanillaPotions,LookForPotionsBase,LookForPotionsCorail,LookForPotionsApotheosis,LookForPotionsIronsSpellbooks,LookForPotionsEcologics,LookForPotionsArsNouveau,LookForPotionsArsElemental,LookForPotionsEidolon,LookForPotionsNaturalist,LookForPotionsPotionsMaster,
-LookForPotionsDeeperDarker,LookForPotionsAutumnity,LookForPotionsQuark, LookForItemsCreateUtilities())
+parallel.waitForAll(LookForVanillaPotions, LookForPotionsBase, LookForPotionsCorail, LookForPotionsApotheosis,
+    LookForPotionsIronsSpellbooks, LookForPotionsEcologics, LookForPotionsArsNouveau, LookForPotionsArsElemental,
+    LookForPotionsEidolon, LookForPotionsNaturalist, LookForPotionsPotionsMaster, LookForPotionsDeeperDarker,
+    LookForPotionsAutumnity, LookForPotionsQuark, LookForItemsCreateUtilities)
