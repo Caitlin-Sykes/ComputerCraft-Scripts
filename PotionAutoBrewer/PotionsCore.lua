@@ -54,9 +54,11 @@ end
 
 -- Function to get a chest by its id
 local function GetChestById(id)
-    for key, chest in pairs(Chests.chests) do
-        if chest.id == id then
-            return chest
+    if id ~= nil then
+        for _, chest in pairs(Chests.chests) do
+            if chest.id == id then
+                return chest
+            end
         end
     end
     return nil
@@ -127,7 +129,10 @@ function PotionsCore:ItemCrafting(item, chest_cluster)
 end
 
 -- Manages the crafting of potions
+-- @potion -> the potion to be made
+-- @crafted -> "false" if no existing craft, otherwise a chest id
 function PotionCraftingManagement(potion, crafted)
+
     cur_output = redstone.getBundledOutput(Customisation.BUNDLED_CABLE_SIDE)
 
     -- If it's got a crafting job and isn't in any of the chests
@@ -136,28 +141,31 @@ function PotionCraftingManagement(potion, crafted)
     }) and crafted == false then
 
         -- Looks for the chest that has the corresponding item
-        local assignedChestId = AssignChest(potion, "potion")
+        local assignedChestIds = AssignChest(potion, "potion")
 
-        if assignedChestId then
-            -- Gets the chest by its ID
-            chest_cluster = GetChestById(assignedChestId)
+        if assignedChestIds then
+            for _, chestId in ipairs(assignedChestIds) do
 
-            -- Turn on Power
-            cur_output = colours.combine(cur_output, chest_cluster.cable)
-            redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
+                -- Gets the chest by its ID
+                chest_cluster = GetChestById(chestId)
 
-            -- Craft the potion
-            PotionsCore:PotionCrafting(potion, chest_cluster)
+                -- Turn on Power
+                cur_output = colours.combine(cur_output, chest_cluster.cable)
+                redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
 
-            -- Wait for potion to appear in the basin, so it can export it to ME
-            while not IsPotionInBasin(potion.result, chest_cluster.basin) do
-                sleep(1)
+                -- Craft the potion
+                PotionsCore:PotionCrafting(potion, chest_cluster)
+
+                -- Wait for potion to appear in the basin, so it can export it to ME
+                while not IsPotionInBasin(potion.result, chest_cluster.basin) do
+                    sleep(1)
+                end
+
+                -- Imports fluid from the basin
+                ME.importFluidFromPeripheral({
+                    name = potion.result
+                }, chest_cluster.basin)
             end
-
-            -- Imports fluid from the basin
-            ME.importFluidFromPeripheral({
-                name = potion.result
-            }, chest_cluster.basin)
         end
 
         -- If crafted is not false, it must be an id, and if its got a crafting recipe, still crafting
@@ -166,40 +174,46 @@ function PotionCraftingManagement(potion, crafted)
     }) and crafted ~= false) then
 
         -- Looks for the chest that has the corresponding item
-        local assignedChestId = AssignChest(potion, "potion")
+        local assignedChestIds = AssignChest(potion, "potion")
 
-        -- Gets the chest by its ID
-        chest_cluster = GetChestById(assignedChestId)
+        if assignedChestIds then
+            for _, chestId in ipairs(assignedChestIds) do
 
-        -- Craft the potion
-        PotionsCore:PotionCrafting(potion, chest_cluster)
+                -- Gets the chest by its ID
+                chest_cluster = GetChestById(chestId)
 
-        -- Wait for potion to appear in the basin, so it can export it to ME
-        while not IsPotionInBasin(potion.result, chest_cluster.basin) do
-            sleep(1)
+                -- Craft the potion
+                PotionsCore:PotionCrafting(potion, chest_cluster)
+
+                -- Wait for potion to appear in the basin, so it can export it to ME
+                while not IsPotionInBasin(potion.result, chest_cluster.basin) do
+                    sleep(1)
+                end
+
+                -- Imports fluid from the basin
+                ME.importFluidFromPeripheral({
+                    name = potion.result
+                }, chest_cluster.basin)
+            end
         end
-
-        -- Imports fluid from the basin
-        ME.importFluidFromPeripheral({
-            name = potion.result
-        }, chest_cluster.basin)
-
         -- Else if it takes up a chest but does not have an active recipe, reset
     elseif (crafted ~= false) then
-        -- Resets to idle
-        chest_to_reset = GetChestById(crafted)
-        chest_to_reset.status = "idle"
+        for _, chestId in ipairs(crafted) do
+            -- Reset each chest status to idle
+            local chest_to_reset = GetChestById(chestId)
+            chest_to_reset.status = "idle"
 
-        -- Turn off the cluster
-        cur_output = colours.subtract(cur_output, chest_to_reset.cable)
-        redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
+            -- Turn off the cluster
+            cur_output = colours.subtract(cur_output, chest_to_reset.cable)
+            redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
+        end
 
     end
 end
 
 -- Manages the crafting of items
 function ItemCraftingManagement(item, crafted)
-    -- print("CRAFTED IS:".. tostring(crafted))
+
     cur_output = redstone.getBundledOutput(Customisation.BUNDLED_CABLE_SIDE)
 
     -- If it's got a crafting job and isn't in any of the chests
@@ -207,64 +221,69 @@ function ItemCraftingManagement(item, crafted)
         name = item.result
     }) and crafted == false then
         -- Looks for the chest that has the corresponding item
-        local assignedChestId = AssignChest(item, "item")
+        local assignedChestIds = AssignChest(item, "item")
 
-        if assignedChestId then
-            -- Gets the chest by its ID
-            chest_cluster = GetChestById(assignedChestId)
+        if assignedChestIds then
+            for _, chestId in ipairs(assignedChestIds) do
+                -- Gets the chest by its ID
+                chest_cluster = GetChestById(chestId)
 
-            -- Turn on Power
-            cur_output = colours.combine(cur_output, chest_cluster.cable)
-            redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
+                -- Turn on Power
+                cur_output = colours.combine(cur_output, chest_cluster.cable)
+                redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
 
-            -- Craft the item
-            PotionsCore:ItemCrafting(item, chest_cluster)
+                -- Craft the item
+                PotionsCore:ItemCrafting(item, chest_cluster)
 
-            -- Wait for item to appear in the basin, so it can export it to ME
-            while not IsItemInBasin(item.result, chest_cluster.basin) do
-                sleep(1)
+                -- Wait for item to appear in the basin, so it can export it to ME
+                while not IsItemInBasin(item.result, chest_cluster.basin) do
+                    sleep(1)
+                end
+
+                -- Imports item from the basin
+                ME.importItemFromPeripheral({
+                    name = item.result
+                }, chest_cluster.basin)
             end
-
-            -- Imports item from the basin
-            ME.importItemFromPeripheral({
-                name = item.result
-            }, chest_cluster.basin)
         end
 
         -- If crafted is not false, it must be an id, and if its got a crafting recipe, still crafting
     elseif (ME.isItemCrafting({
         name = item.result
-    }) and crafted ~= false) then
+    }) and type(crafted) == "table") then
         -- Looks for the chest that has the corresponding item
-        local assignedChestId = AssignChest(item, "item")
+        local assignedChestIds = AssignChest(item, "item")
 
-        -- Gets the chest by its ID
-        chest_cluster = GetChestById(assignedChestId)
+        if assignedChestIds then
+            for _, chestId in ipairs(assignedChestIds) do
+                -- Gets the chest by its ID
+                chest_cluster = GetChestById(chestId)
 
-        -- Craft the item
-        PotionsCore:ItemCrafting(item, chest_cluster)
+                -- Craft the item
+                PotionsCore:ItemCrafting(item, chest_cluster)
 
-        -- Wait for item to appear in the basin, so it can export it to ME
-        while not IsItemInBasin(item.result, chest_cluster.basin) do
-            sleep(1)
+                -- Wait for item to appear in the basin, so it can export it to ME
+                while not IsItemInBasin(item.result, chest_cluster.basin) do
+                    sleep(1)
+                end
+
+                -- Imports item from the basin
+                ME.importItemFromPeripheral({
+                    name = item.result
+                }, chest_cluster.basin)
+            end
         end
-
-        -- Imports item from the basin
-        ME.importItemFromPeripheral({
-            name = item.result
-        }, chest_cluster.basin)
-
         -- Else if it takes up a chest but does not have an active recipe, reset
-    elseif (crafted ~= false) then
+    elseif (type(crafted) == "table") then
+        for _, chestId in ipairs(crafted) do
+            -- Reset each chest status to idle
+            local chest_to_reset = GetChestById(chestId)
+            chest_to_reset.status = "idle"
 
-        -- Resets to idle
-        chest_to_reset = GetChestById(crafted)
-        chest_to_reset.status = "idle"
-
-        -- Turn off the cluster
-        cur_output = colours.subtract(cur_output, chest_to_reset.cable)
-        redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
-
+            -- Turn off the cluster
+            cur_output = colours.subtract(cur_output, chest_to_reset.cable)
+            redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
+        end
     end
 end
 -- -----------------------------------------------------------------------------
@@ -273,18 +292,19 @@ end
 
 -- Checks if the item is already being crafted by going through the chests
 function CheckIfItemIsBeingCrafted(item)
+    local chestIds = {}
     for _, chest in pairs(Chests.chests) do
         -- If the chest status does not equal idle and equals potion
         if chest.status ~= "idle" and chest.status == item then
-            -- It is being crafted in the following chest
-            return chest.id
+            -- It is being crafted in the following chest, add to the list
+            table.insert(chestIds, chest.id)
         end
     end
-    return false
+    return #chestIds > 0 and chestIds or false
 end
 
 -- Goes through a provided item/PotionList, and checks whether its being crafted
-function PotionsCore:SearchAndStartCrafting(list, type)
+function PotionsCore:SearchAndStartCrafting(list, typeOfCraft)
 
     -- For every potion in the given potion list
     for _, item in pairs(list) do
@@ -292,13 +312,33 @@ function PotionsCore:SearchAndStartCrafting(list, type)
         crafted = CheckIfItemIsBeingCrafted(item.result)
 
         -- If type is potion then starts the potion crafting logic
-        if type == "potion" then
-            -- Check if its present in any of the chests
-            PotionCraftingManagement(item, crafted)
+        if typeOfCraft == "potion" then
+            -- If there is multiple nodes already crafting then go through them all and verify status
+            if type(crafted) == "table" then
+                -- Iterate over each element in crafted if it's an array
+                for _, chestId in ipairs(crafted) do
+                    print("Processing chest ID: " .. chestId)
+                    PotionCraftingManagement(item, chestId)
+                end
+
+            else
+                -- Check if its present in any of the chests
+                PotionCraftingManagement(item, false)
+            end
 
             -- else if type is item then do item crafting logic
-        elseif type == "item" then
-            ItemCraftingManagement(item, crafted)
+        elseif typeOfCraft == "item" then
+            -- If there is multiple nodes already crafting then go through them all and verify status
+            if type(crafted) == "table" then
+                -- Iterate over each element in crafted if it's an array
+                for _, chestId in ipairs(crafted) do
+                    print("Processing chest ID: " .. chestId)
+                    ItemCraftingManagement(item, chestId)
+                end
+            else
+                -- Check if its present in any of the chests
+                ItemCraftingManagement(item, false)
+            end
         else
             error("Invalid type in potions list: " .. list)
         end
@@ -308,29 +348,29 @@ end
 
 -- Function finds the chest used for crafting by looking for the ingredient used
 function AssignChest(result, type)
+    local chestIds = {}
     -- For each configured chest cluster
     for _, chest in pairs(Chests.chests) do
-
         -- Gets the id of the chest attached to this cluster
-        chest_modem = peripheral.wrap(chest.id)
+        local chest_modem = peripheral.wrap(chest.id)
 
-        if (chest_modem ~= nil) then
-            -- If the chest status matches the potion then return id
+        if chest_modem ~= nil then
+            -- If the chest status matches the potion then add id to the list
             if chest.status == result.result then
-                return chest.id
-
-                -- else do some searching
+                table.insert(chestIds, chest.id)
             else
                 -- Goes through the chest and looks for the ingredient for the potion
                 for slot, item in pairs(chest_modem.list()) do
-                    --   If it has the ingredient, sets status to the potion and returns id
-                    if (item.name == result.ingredient and type == "potion") then
+                    -- If it has the ingredient, set status to the potion and add id to the list
+                    if item.name == result.ingredient and type == "potion" then
                         chest.status = result.result
-                        return chest.id
+                        table.insert(chestIds, chest.id)
+                        break
 
-                    elseif (IsItemInIngredients(item, result.ingredient) and type == "item") then
+                    elseif IsItemInIngredients(item, result.ingredient) and type == "item" then
                         chest.status = result.result
-                        return chest.id
+                        table.insert(chestIds, chest.id)
+                        break
                     end
                 end
             end
@@ -338,7 +378,7 @@ function AssignChest(result, type)
             print("Cannot find chest by the id: " .. chest.id)
         end
     end
-    return false
+    return #chestIds > 0 and chestIds or false
 end
 
 -- Check if the potion is in the basin
