@@ -26,6 +26,8 @@ local cur_output = redstone.getBundledOutput(Customisation.BUNDLED_CABLE_SIDE)
 -- -----------------------------------------------------------------------------
 
 -- Private method to check for peripheral validity
+-- @peripheral -> peripheral to check connection of
+-- @name -> name of peripheral
 local function ValidatePeripheral(peripheral, name)
     if peripheral == nil then
         error("PERIPHERAL ERROR: Cannot find a connected " .. name .. ".")
@@ -53,6 +55,7 @@ function PotionsCore:GetMEInfo()
 end
 
 -- Function to get a chest by its id
+-- @id -> name of the chest, ie "minecraft:chest_0"
 local function GetChestById(id)
     if id ~= nil then
         for _, chest in pairs(Chests.chests) do
@@ -68,6 +71,8 @@ end
 -- Core Logic
 -- -----------------------------------------------------------------------------
 -- Handles the potion crafting
+-- @potion -> the potion that is being crafted
+-- @chest_cluster -> the chest cluster that the job is assigned to
 function PotionsCore:PotionCrafting(potion, chest_cluster)
 
     if (chest_cluster.id ~= nil) then
@@ -92,6 +97,8 @@ function PotionsCore:PotionCrafting(potion, chest_cluster)
 end
 
 -- Handles the item crafting
+-- @item -> the item that is being crafted
+-- @chest_cluster -> the chest cluster that the job is assigned to
 function PotionsCore:ItemCrafting(item, chest_cluster)
     if (chest_cluster.id ~= nil) then
         print("Starting the crafting of: " .. item.result .. " in chest cluster " .. chest_cluster.id)
@@ -212,6 +219,8 @@ function PotionCraftingManagement(potion, crafted)
 end
 
 -- Manages the crafting of items
+-- @item -> the item to be made
+-- @crafted -> "false" if no existing craft, otherwise a chest id
 function ItemCraftingManagement(item, crafted)
 
     cur_output = redstone.getBundledOutput(Customisation.BUNDLED_CABLE_SIDE)
@@ -250,7 +259,7 @@ function ItemCraftingManagement(item, crafted)
         -- If crafted is not false, it must be an id, and if its got a crafting recipe, still crafting
     elseif (ME.isItemCrafting({
         name = item.result
-    }) and type(crafted) == "table") then
+    }) and crafted ~= false) then
         -- Looks for the chest that has the corresponding item
         local assignedChestIds = AssignChest(item, "item")
 
@@ -274,7 +283,7 @@ function ItemCraftingManagement(item, crafted)
             end
         end
         -- Else if it takes up a chest but does not have an active recipe, reset
-    elseif (type(crafted) == "table") then
+    elseif (crafted ~= false) then
         for _, chestId in ipairs(crafted) do
             -- Reset each chest status to idle
             local chest_to_reset = GetChestById(chestId)
@@ -286,11 +295,13 @@ function ItemCraftingManagement(item, crafted)
         end
     end
 end
+
 -- -----------------------------------------------------------------------------
 -- Handlers
 -- -----------------------------------------------------------------------------
 
 -- Checks if the item is already being crafted by going through the chests
+-- @item -> the item that a job may be running for
 function CheckIfItemIsBeingCrafted(item)
     local chestIds = {}
     for _, chest in pairs(Chests.chests) do
@@ -304,6 +315,8 @@ function CheckIfItemIsBeingCrafted(item)
 end
 
 -- Goes through a provided item/PotionList, and checks whether its being crafted
+-- @list -> the list of items to check the crafting status of
+-- @typeOfCraft -> what type of craft it is, either "potion" or "item"
 function PotionsCore:SearchAndStartCrafting(list, typeOfCraft)
 
     -- For every potion in the given potion list
@@ -347,10 +360,13 @@ function PotionsCore:SearchAndStartCrafting(list, typeOfCraft)
 end
 
 -- Function finds the chest used for crafting by looking for the ingredient used
+-- @result -> the item that is being crafted
+-- @type -> type of craft, either "potion" or "item"
 function AssignChest(result, type)
     local chestIds = {}
     -- For each configured chest cluster
     for _, chest in pairs(Chests.chests) do
+
         -- Gets the id of the chest attached to this cluster
         local chest_modem = peripheral.wrap(chest.id)
 
@@ -382,6 +398,8 @@ function AssignChest(result, type)
 end
 
 -- Check if the potion is in the basin
+-- @potionName -> the name of the potion that is being crafted
+-- @basinId -> the id of a basin to check
 function IsPotionInBasin(potionName, basinId)
     local basin = peripheral.wrap(basinId)
     if basin then
@@ -395,6 +413,8 @@ function IsPotionInBasin(potionName, basinId)
 end
 
 -- Check if the item is in the basin
+-- @itemName -> the name of the item that is being crafted
+-- @basinId -> the id of a basin to check
 function IsItemInBasin(itemName, basinId)
     local basin = peripheral.wrap(basinId)
     if basin then
@@ -408,6 +428,8 @@ function IsItemInBasin(itemName, basinId)
 end
 
 -- Function to check if item.name matches any ingredient in the list
+-- @item -> the list of items in a container
+-- @ingredients -> the list of ingredients for a job, an array
 function IsItemInIngredients(item, ingredients)
     for _, ingredient in ipairs(ingredients) do
         if item.name == ingredient then
