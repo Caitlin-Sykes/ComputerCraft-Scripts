@@ -10,7 +10,6 @@ local ReactorCore = require("/ReactorMonitoring/ReactorCore")
 -- Gets Reactor Core
 local ReactorSafeties = require("/ReactorMonitoring/ReactorSafeties")
 
-
 -- -----------------------------------------------------------------------------
 -- Update Functions
 -- -----------------------------------------------------------------------------
@@ -27,6 +26,11 @@ function CheckReactorStatus()
 
         -- Log to Computer
         print("Reactor Info: " .. reactorInfo.status)
+
+        -- checks if reactor is in warming up state
+        if ReactorCore:GetReactorInfo() == "warming_up" then
+            InWarmingUpState()
+        end
 
         -- Sleeps for custom amount of seconds
         os.sleep(Customisation.DISPLAY_REFRESH) -- Update this as needed
@@ -66,7 +70,6 @@ function CheckPowerGen()
             -- Update the GUI with temperature
             ReactorGui.UpdatePowerGenDisplay(reactorInfo.generationRate)
         end
-        
 
         -- Log to Computer
         print("Power Generation: " .. reactorInfo.generationRate)
@@ -85,7 +88,6 @@ function CheckInputGate()
             -- Update the GUI with temperature
             ReactorGui.UpdateInputGateDisplay(iFluxGate.getSignalLowFlow())
         end
-        
 
         -- Log to Computer
         print("Input Gate: " .. iFluxGate.getSignalLowFlow())
@@ -104,7 +106,6 @@ function CheckOutputGate()
             -- Update the GUI with temperature
             ReactorGui.UpdateOutputGateDisplay(oFluxGate.getSignalLowFlow())
         end
-        
 
         -- Log to Computer
         print("Output Gate: " .. oFluxGate.getSignalLowFlow())
@@ -124,8 +125,7 @@ function CheckFuel()
             ReactorGui.UpdateFuelDisplay(fuelRemaining)
         end
 
-       
-         -- If Safety Enabled
+        -- If Safety Enabled
         if (Customisation.ENABLE_SAFETY) then
             -- Check the Temperature against the safeties
             ReactorSafeties.FuelKillSwitch(fuelRemaining)
@@ -154,11 +154,10 @@ function CheckField()
             -- Check the Temperature against the safeties
             ReactorSafeties.ShieldKillSwitch(fieldRemaining, reactorInfo.status)
         end
-  
 
         -- Log to Computer
         print("Field Remaining: " .. fieldRemaining)
-        
+
         -- Sleeps for custom amount of seconds
         os.sleep(Customisation.DISPLAY_REFRESH)
     end
@@ -172,6 +171,35 @@ function RefreshScreen()
     end
 end
 
+-- Controls for reactor in state "warming_up"
+function InWarmingUpState()
+    local inputFlux = Customisation.STARTING_REACTOR_VALUE_INPUT
+    local outputFlux = Customisation.STARTING_REACTOR_VALUE_OUTPUT
+    local waitTime = Customisation.STARTING_REACTOR_VALUE_WAIT
+
+    -- Log and print the startup message
+    local msg = "Starting Reactor Cycle. Setting input flux gate to " .. inputFlux .. " and output flux gate to " ..
+                    outputFlux .. ". Waiting " .. waitTime .. " seconds before starting operations."
+    print(msg)
+
+    if Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error" then
+        LogMessage(msg, "[INFO]")
+    end
+
+    -- Set starting values
+    ReactorCore:SetInputFlux(inputFlux)
+    ReactorCore:SetOutputFlux(outputFlux)
+    ReactorCore:GetReactor().activateReactor()
+    -- Start the timer
+    print("Waiting for the start-up period to complete...")
+    for remainingTime = waitTime, 1, -1 do
+        print("Remaining time: " .. remainingTime .. " seconds...")
+        sleep(1) -- Sleep for 1 second at a time
+    end
+
+    print("Start-up period complete. Reactor is ready for operations.")
+end
+
 -- -----------------------------------------------------------------------------
 -- Automatic Monitoring Stuff
 -- -----------------------------------------------------------------------------
@@ -179,8 +207,13 @@ end
 -- Function to automatically adjust energy output
 function AutomaticEnergyAdjustment()
 
+    -- provides a lock to cease all increase thresholds
+    local lockIncreaseAmount = false
+
     -- Continuously monitor the reactor
-    while Customisation.AUTOMATIC_MONITORING and ReactorCore:GetFieldPercentageRemaining() > Customisation.MIN_FIELD_PERCENT and ReactorCore:GetOutputFluxVal() < Customisation.MAX_INCREASE_THRESHOLD do
+    while Customisation.AUTOMATIC_MONITORING and ReactorCore:GetFieldPercentageRemaining() >
+        Customisation.MIN_FIELD_PERCENT and ReactorCore:GetOutputFluxVal() < Customisation.MAX_INCREASE_THRESHOLD and
+        not lockIncreaseAmount and ReactorCore:GetReactorInfo() ~= "warming_up" do
 
         -- Get the reactor's current field generation and output flux
         local reactorInfo = ReactorCore:GetReactorInfo()
@@ -198,7 +231,7 @@ function AutomaticEnergyAdjustment()
             local newOutputFlux = currentOutputFlux + increment
             ReactorCore:SetOutputFlux(newOutputFlux)
             local msg = "Increased output gate by " .. increment .. ". New output flux: " .. newOutputFlux
-            
+
             print(msg)
             if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error") then
                 LogMessage(msg, "[INFO]")
@@ -213,14 +246,15 @@ function AutomaticEnergyAdjustment()
                 fieldGeneration = reactorInfo.fieldStrength
 
                 -- If the field generation is not safe, stop increasing the output gate
-                if fieldGeneration < Customisation.KILL_FIELD_PERCENT then
+                if fieldGeneration < Customisation.MIN_FIELD_PERCENT then
                     local errorMsg = "Field generation below safe threshold! Output gate increase halted."
                     print(errorMsg)
                     if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "error") then
                         LogMessage(errorMsg, "[ERROR]")
-                        -- Attempts to recover it
-                        RecoverFieldGeneration(ReactorCore:GetFieldPercentageRemaining(), ReactorCore:GetInputFlux().getSignalLowFlow())
                     end
+                    -- Attempts to recover it
+                    RecoverFieldGeneration(ReactorCore:GetFieldPercentageRemaining(), ReactorCore:GetInputFluxVal())
+                    lockIncreaseAmount = true
                     return -- Stop the adjustment process if field is unsafe
                 end
 
@@ -230,8 +264,21 @@ function AutomaticEnergyAdjustment()
             end
         end
 
+        -- If locked, increase input flux until its safe again
+        if lockIncreaseAmount and fieldGeneration < Customisation.MIN_FIELD_PERCENT then
+            local amnt = ReactorCore:GetInputFlux()
+            amnt = amnt + 1000
+            ReactorCore:SetInputFlux(amnt)
+            -- If locked but above the min field
+        else
+            if lockIncreaseAmount and fieldGeneration > Customisation.TARGET_FIELD_PERCENT then
+                lockIncreaseAmount = false
+            end
+        end
+
         -- After completing all increments, wait before starting the cycle again
-        local cycleCompleteMsg = "Completed output gate cycle. Waiting .. " .. Customisation.ADJUST_INTERVAL .. "before restarting."
+        local cycleCompleteMsg = "Completed output gate cycle. Waiting .. " .. Customisation.ADJUST_INTERVAL ..
+                                     "before restarting."
         print(cycleCompleteMsg)
         if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error") then
             LogMessage(cycleCompleteMsg, "[INFO]")
@@ -239,6 +286,16 @@ function AutomaticEnergyAdjustment()
 
         -- Wait for the cycle reset interval before restarting
         os.sleep(Customisation.ADJUST_INTERVAL)
+    end
+end
+
+-- Function to startup the reactor
+function ReactorInit()
+    if ReactorCore:GetReactorInfo().status == "warming_up" then
+        -- Sets things
+        InWarmingUpState()
+    else
+        print("Reactor is not in 'warming_up' state. Skipping warm-up procedure.")
     end
 end
 
@@ -257,12 +314,15 @@ end
 if Customisation.ENABLE_LOGGING then
     ReactorCore:LogMessageHeader()
 
-
     -- Makes log file directory if it doesn't exist and logging is enabled
     if not fs.exists(Customisation.LOG_FILE_DIRECTORY) then
         fs.makeDir(Customisation.LOG_FILE_DIRECTORY)
     end
 end
 
+-- ReactorInitSettings
+ReactorInit()
+
 -- Main loop
-parallel.waitForAll(CheckReactorStatus, CheckTemperature, CheckPowerGen, CheckInputGate, CheckOutputGate, CheckFuel, CheckField, AutomaticEnergyAdjustment, RefreshScreen)
+parallel.waitForAll(CheckReactorStatus, CheckTemperature, CheckPowerGen, CheckInputGate, CheckOutputGate, CheckFuel,
+    CheckField, AutomaticEnergyAdjustment, RefreshScreen)

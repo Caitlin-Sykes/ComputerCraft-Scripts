@@ -1,8 +1,9 @@
 -- -----------------------------------------------------------------------------
 -- Draconic Evolution Core Functions
 -- -----------------------------------------------------------------------------
-
-local ReactorCore = {}
+local ReactorCore = {
+    originalInputFlux = nil
+}
 local Customisation = require("/ReactorMonitoring/Customisation")
 
 -- Private variables to store peripherals
@@ -20,7 +21,7 @@ local messageTable = {
     ["Reactor has failed to cool. Remaining powered down..."] = false,
     ["Reactor has cooled. Restarting..."] = false,
     ["WARNING: Reactor is running low on fuel..."] = false,
-    ["Fuel has hit the termination value. Stopping the reactor..."] = false,
+    ["Fuel has hit the termination value. Stopping the reactor..."] = false
 }
 
 -- -----------------------------------------------------------------------------
@@ -63,7 +64,7 @@ function ReactorCore:SetupPeripherals()
         error("Cannot find a connected output flux gate.")
     end
     if inputFlux == nil then
-         if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "info") then
+        if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "info") then
             LogMessage("PERIPHERAL ERROR: Cannot find a connected input flux gate", "[ERROR]")
         end
         error("Cannot find a connected input flux gate.")
@@ -77,14 +78,14 @@ end
 -- Method to return the fuel percentage remaining
 function ReactorCore:GetFuelPercentageRemaining()
     local reactorInfo = reactor.getReactorInfo()
-    fuelPercent = 100 - math.ceil(reactorInfo.fuelConversion / reactorInfo.maxFuelConversion * 10000)*.01
+    fuelPercent = 100 - math.ceil(reactorInfo.fuelConversion / reactorInfo.maxFuelConversion * 10000) * .01
     return fuelPercent
 end
 
 -- Method to return the field percentage remaining
 function ReactorCore:GetFieldPercentageRemaining()
     local reactorInfo = reactor.getReactorInfo()
-    fieldPercent = math.ceil(reactorInfo.fieldStrength / reactorInfo.maxFieldStrength * 10000)*.01
+    fieldPercent = math.ceil(reactorInfo.fieldStrength / reactorInfo.maxFieldStrength * 10000) * .01
     return fieldPercent
 end
 
@@ -103,40 +104,41 @@ function ReactorCore:SendEnderModemMessage(msg)
     -- If the message has been sent before, don't send again
     if (messageTable[msg] == false) then
 
-    -- Sets that message to true
-    messageTable[msg] = true
+        -- Sets that message to true
+        messageTable[msg] = true
 
-    local modem = reactor.getReactorInfo()
+        local modem = reactor.getReactorInfo()
 
-    -- Opens channels for receiving
-    enderModem.open(Customisation.RECEIVE_MESSAGE)
+        -- Opens channels for receiving
+        enderModem.open(Customisation.RECEIVE_MESSAGE)
 
-    -- Sends message
-    enderModem.transmit(Customisation.SEND_MESSAGE, Customisation.RECEIVE_MESSAGE, msg)
+        -- Sends message
+        enderModem.transmit(Customisation.SEND_MESSAGE, Customisation.RECEIVE_MESSAGE, msg)
 
-    if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "info") then
+        if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "info") then
             local logMsg = "Sending message to ender modem: " .. msg .. " on port: " .. Customisation.SEND_MESSAGE
             LogMessage(logMsg, "[INFO]")
-    end
+        end
 
-    -- Wait for acknowledgment
-    print("Waiting for acknowledgment...")
-    local timeout = Customisation.ENDER_MODEM_MESSAGE_TIMEOUT
+        -- Wait for acknowledgment
+        print("Waiting for acknowledgment...")
+        local timeout = Customisation.ENDER_MODEM_MESSAGE_TIMEOUT
 
-    local event, side, channel, replyChannel, message, distance
-    repeat
-    event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
-    until channel == Customisation.RECEIVE_MESSAGE
+        local event, side, channel, replyChannel, message, distance
+        repeat
+            event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
+        until channel == Customisation.RECEIVE_MESSAGE
 
-    print("Received a reply. Closing Channels..")
-    if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "info") then
-            local logMsg = "Received acknowledgement message from ender modem on port: " .. Customisation.RECEIVE_MESSAGE
+        print("Received a reply. Closing Channels..")
+        if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "info") then
+            local logMsg = "Received acknowledgement message from ender modem on port: " ..
+                               Customisation.RECEIVE_MESSAGE
             LogMessage(logMsg, "[INFO]")
-    end
+        end
 
-    -- Close channels
-    enderModem.close(Customisation.RECEIVE_MESSAGE)
-    enderModem.close(Customisation.SEND_MESSAGE)
+        -- Close channels
+        enderModem.close(Customisation.RECEIVE_MESSAGE)
+        enderModem.close(Customisation.SEND_MESSAGE)
 
     end
 end
@@ -144,7 +146,6 @@ end
 -- -----------------------------------------------------------------------------
 -- Logging
 -- -----------------------------------------------------------------------------
-
 
 -- Function to get the next log file name, creating a new one if none exists
 function GetNextLogFile()
@@ -169,7 +170,7 @@ function GetNextLogFile()
     table.sort(logFiles, function(a, b)
         local aNum = tonumber(a:match("%d+")) or 0
         local bNum = tonumber(b:match("%d+")) or 0
-        return aNum < bNum  -- Sort by log file number
+        return aNum < bNum -- Sort by log file number
     end)
 
     -- If no log files exist, create the first one
@@ -179,7 +180,7 @@ function GetNextLogFile()
     end
 
     -- Determine the current log file to write to
-    local currentLogFile = logFiles[#logFiles]  -- Get the last log file (newest)
+    local currentLogFile = logFiles[#logFiles] -- Get the last log file (newest)
     local currentLogFilePath = fs.combine(Customisation.LOG_FILE_DIRECTORY, currentLogFile)
 
     -- Check if the current log file exceeds the size limit
@@ -190,7 +191,7 @@ function GetNextLogFile()
 
         -- Delete the oldest log if the number exceeds the allowed limit
         if #logFiles >= Customisation.NUMBER_TO_KEEP then
-            local oldestLog = logFiles[1]  -- Get the oldest log file
+            local oldestLog = logFiles[1] -- Get the oldest log file
             fs.delete(fs.combine(Customisation.LOG_FILE_DIRECTORY, oldestLog))
             msg = ("Deleted oldest log file: " .. oldestLog)
             print(msg)
@@ -205,11 +206,11 @@ end
 
 -- Function to write the log file header
 function ReactorCore:LogMessageHeader()
-    
+
     -- Get the appropriate log file (rotate if necessary)
     local logFileName = GetNextLogFile()
 
-     -- Open the file for appending the log message
+    -- Open the file for appending the log message
     local logFile = fs.open(logFileName, "a")
 
     logFile.writeLine("-----------------------------------------------------------------------------")
@@ -223,7 +224,7 @@ function LogMessage(message, messageLevel)
     -- Get the appropriate log file (rotate if necessary)
     local logFileName = GetNextLogFile()
 
-     -- Open the file for appending the log message
+    -- Open the file for appending the log message
     local logFile = fs.open(logFileName, "a")
 
     -- Append the log message with a timestamp
@@ -232,9 +233,6 @@ function LogMessage(message, messageLevel)
     -- Close the file to save the changes
     logFile.close()
 end
-
-
-
 
 -- -----------------------------------------------------------------------------
 -- Getters
@@ -273,9 +271,14 @@ end
 function ReactorCore:GetOutputFluxVal()
     return outputFlux.getSignalLowFlow()
 end
+
+function ReactorCore:GetInputFluxVal()
+    return inputFlux.getSignalLowFlow()
+end
+
 -- Setter methods to provide access to the peripherals from outside
 function ReactorCore:SetOutputFlux(num)
-     outputFlux.setSignalLowFlow(num)
+    outputFlux.setSignalLowFlow(num)
 end
 
 function ReactorCore:SetInputFlux(num)

@@ -27,12 +27,12 @@ function TemperatureKillSwitch(temp)
 
         print(msg)
 
-    -- If over the max temp and already restarted, stays off
+        -- If over the max temp and already restarted, stays off
     elseif temp >= Customisation.MAX_TEMP and temp_restarted then
         msg = "Reactor has failed to cool. Remaining powered down..."
         print(msg)
 
-    -- If temperature is within tolerance and reactor has been restarted, restart the reactor
+        -- If temperature is within tolerance and reactor has been restarted, restart the reactor
     elseif (temp <= Customisation.MIN_TEMP - Customisation.TOLERANCE_TEMP) and temp_restarted then
         temp_restarted = false
         msg = "Reactor has cooled. Restarting..."
@@ -42,9 +42,9 @@ function TemperatureKillSwitch(temp)
 
     -- Logs Errors and Info
     if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "info" and msg ~= nil) then
-            LogMessage(msg, "[ERROR]")
+        LogMessage(msg, "[ERROR]")
     elseif (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "info" and msg == nil) then
-            LogMessage("Reactor Temperature is healthy", "[INFO]")
+        LogMessage("Reactor Temperature is healthy", "[INFO]")
     end
 
     -- If using ender modem, send the message
@@ -53,36 +53,36 @@ function TemperatureKillSwitch(temp)
         msg = nil
     end
 
-    
 end
 
 -- Controls the field generation display
 function ShieldKillSwitch(shield, reactorStatus)
     local msg = nil
     local reactor = ReactorCore:GetReactor()
-    
+
     if shield <= Customisation.KILL_FIELD_PERCENT then
         msg = "WARNING: Reactor has too low of a containment field... Stopping the reactor..."
         print(msg)
         reactor.stopReactor()
         reactor.chargeReactor()
-        
+
         -- Recovers Field Generation
         RecoverFieldGeneration(ReactorCore:GetFieldPercentageRemaining(), ReactorCore:GetInputFlux())
 
     elseif shield <= Customisation.MIN_FIELD_PERCENT then
         msg = "WARNING: Reactor generation field has hit the warning threshold..."
+        -- Recovers Field Generation
+        RecoverFieldGeneration(ReactorCore:GetFieldPercentageRemaining(), ReactorCore:GetInputFlux())
         print(msg)
-    
+
     else
         msg = "Reactor Containment is healthy"
         print(msg)
     end
-    
 
     -- Logs Errors and Info
     if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "info" and msg ~= nil) then
-            LogMessage(msg, "[DEBUG]")
+        LogMessage(msg, "[DEBUG]")
     end
 
     -- If using ender modem, send the message
@@ -95,12 +95,11 @@ function ShieldKillSwitch(shield, reactorStatus)
 end
 
 -- Function to recover field generation by adjusting the input gate
-function RecoverFieldGeneration(shield, inputFlux)  
+function RecoverFieldGeneration(shield, inputFlux)
     -- Store the original input flux if it's not already stored
-    if not originalInputFlux then
-        originalInputFlux = ReactorCore:GetInputFluxVal()
+    if not ReactorCore.originalInputFlux then
+        ReactorCore.originalInputFlux = ReactorCore:GetInputFluxVal()
     end
-
 
     -- Check if field generation is still below the safe threshold
     if shield < Customisation.MIN_FIELD_PERCENT then
@@ -112,7 +111,7 @@ function RecoverFieldGeneration(shield, inputFlux)
 
         -- Logs Errors and Info
         if (Customisation.ENABLE_LOGGING) then
-                LogMessage(msg, "[INFO]")
+            LogMessage(msg, "[INFO]")
         end
 
         -- Wait for the field to recover
@@ -123,21 +122,21 @@ function RecoverFieldGeneration(shield, inputFlux)
         end
 
         -- Once recovered, reset the input flux to its original value
-        ReactorCore:SetInputFlux(originalInputFlux)
-        msg = ("Field recovered. Resetting input flux to original value: " .. originalInputFlux)
+        ReactorCore:SetInputFlux(ReactorCore.originalInputFlux)
+        msg = ("Field recovered. Resetting input flux to original value: " .. ReactorCore.originalInputFlux)
         print(msg)
-         -- Logs Errors and Info
+        -- Logs Errors and Info
         if (Customisation.ENABLE_LOGGING) then
-                LogMessage(msg, "[INFO]")
+            LogMessage(msg, "[INFO]")
         end
 
     else
         -- If the field generation recovered during the wait, do nothing
         msg = ("Field generation recovered on its own. No input flux adjustment needed.")
-         print(msg)
-         -- Logs Errors and Info
+        print(msg)
+        -- Logs Errors and Info
         if (Customisation.ENABLE_LOGGING) then
-                LogMessage(msg, "[INFO]")
+            LogMessage(msg, "[INFO]")
         end
     end
 end
@@ -153,7 +152,7 @@ function FuelKillSwitch(fuel)
         print(msg)
         reactor.stopReactor()
 
-    -- Warn if fuel is below the low fuel warning threshold
+        -- Warn if fuel is below the low fuel warning threshold
     elseif fuel <= Customisation.LOW_FUEL_WARNING then
         msg = "WARNING: Reactor is running low on fuel..."
         print(msg)
@@ -161,9 +160,9 @@ function FuelKillSwitch(fuel)
 
     -- Logs Errors and Info
     if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "info" and msg ~= nil) then
-            LogMessage(msg, "[ERROR]")
+        LogMessage(msg, "[ERROR]")
     elseif (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "info" and msg == nil) then
-            LogMessage("Reactor Fuel is good", "[INFO]")
+        LogMessage("Reactor Fuel is good", "[INFO]")
     end
 
     -- If using ender modem, send the message
@@ -172,7 +171,6 @@ function FuelKillSwitch(fuel)
         msg = nil
     end
 end
-
 
 -- -----------------------------------------------------------------------------
 -- Return the Safety Module
