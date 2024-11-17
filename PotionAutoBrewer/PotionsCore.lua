@@ -76,7 +76,10 @@ end
 function PotionsCore:PotionCrafting(potion, chest_cluster)
 
     if (chest_cluster.id ~= nil) then
-        print("Starting the crafting of: " .. potion.result .. " in chest cluster " .. chest_cluster.id)
+        print("Needs base potion: " .. potion.base_potion)
+        print("Needs the following item: " .. potion.ingredient)
+        print("--------------------------")
+
         -- Gets the attached chest
         chest_modem = peripheral.wrap(chest_cluster.id)
         basin_modem = peripheral.wrap(chest_cluster.basin)
@@ -88,9 +91,10 @@ function PotionsCore:PotionCrafting(potion, chest_cluster)
             }, chest_cluster.basin, 1000)
 
             -- Exporting the item from the chest to the basin
-            chest_modem.pushItems(chest_cluster.basin, 1)
+            -- chest_modem.pushItems(chest_cluster.basin, 1)
         end
 
+    else
         print("Ending the crafting of: " .. potion.result .. " in chest cluster " .. chest_cluster.id)
     end
 
@@ -130,7 +134,7 @@ function PotionsCore:ItemCrafting(item, chest_cluster)
                 end
             end
         end
-
+    else
         print("Ending the crafting of: " .. item.result .. " in chest cluster " .. chest_cluster.id)
     end
 end
@@ -151,6 +155,8 @@ function PotionCraftingManagement(potion, crafted)
         local assignedChestIds = AssignChest(potion, "potion")
 
         if assignedChestIds then
+            print("--------------------------")
+            print("Starting Crafting of: " .. potion.result)
             for _, chestId in ipairs(assignedChestIds) do
 
                 -- Gets the chest by its ID
@@ -204,8 +210,9 @@ function PotionCraftingManagement(potion, crafted)
             end
         end
         -- Else if it takes up a chest but does not have an active recipe, reset
-    elseif (crafted ~= false) then
+    else
         for _, chestId in ipairs(crafted) do
+            print("KILLING JOB")
             -- Reset each chest status to idle
             local chest_to_reset = GetChestById(chestId)
             chest_to_reset.status = "idle"
@@ -283,7 +290,7 @@ function ItemCraftingManagement(item, crafted)
             end
         end
         -- Else if it takes up a chest but does not have an active recipe, reset
-    elseif (crafted ~= false) then
+    else
         for _, chestId in ipairs(crafted) do
             -- Reset each chest status to idle
             local chest_to_reset = GetChestById(chestId)
@@ -300,18 +307,29 @@ end
 -- Handlers
 -- -----------------------------------------------------------------------------
 
--- Checks if the item is already being crafted by going through the chests
+-- Checks if the item is already being crafted by going through the chests or ME system
 -- @item -> the item that a job may be running for
 function CheckIfItemIsBeingCrafted(item)
     local chestIds = {}
+
     for _, chest in pairs(Chests.chests) do
-        -- If the chest status does not equal idle and equals potion
+        -- If the chest status does not equal idle and equals the item
         if chest.status ~= "idle" and chest.status == item then
             -- It is being crafted in the following chest, add to the list
             table.insert(chestIds, chest.id)
+
+            -- Check if the ME system has a job for the item
+        elseif ME.isFluidCrafting({
+            name = item
+        }) or ME.isItemCrafting({
+            name = item
+        }) then
+            return false
         end
     end
-    return #chestIds > 0 and chestIds or false
+
+    -- If no matching chests or jobs, return nil
+    return #chestIds > 0 and chestIds or nil
 end
 
 -- Goes through a provided item/PotionList, and checks whether its being crafted
@@ -331,11 +349,13 @@ function PotionsCore:SearchAndStartCrafting(list, typeOfCraft)
                 -- Iterate over each element in crafted if it's an array
                 for _, chestId in ipairs(crafted) do
                     print("Processing chest ID: " .. chestId)
+                    print("Starting craft of: " .. item.result)
                     PotionCraftingManagement(item, chestId)
                 end
 
-            else
-                -- Check if its present in any of the chests
+            elseif crafted == false then
+                print("--------------------------")
+                print("Starting Crafting Job: Potion")
                 PotionCraftingManagement(item, false)
             end
 
@@ -345,11 +365,11 @@ function PotionsCore:SearchAndStartCrafting(list, typeOfCraft)
             if type(crafted) == "table" then
                 -- Iterate over each element in crafted if it's an array
                 for _, chestId in ipairs(crafted) do
-                    print("Processing chest ID: " .. chestId)
                     ItemCraftingManagement(item, chestId)
                 end
-            else
-                -- Check if its present in any of the chests
+            elseif crafted == false then
+                print("--------------------------")
+                print("Starting Crafting Job: Item")
                 ItemCraftingManagement(item, false)
             end
         else
