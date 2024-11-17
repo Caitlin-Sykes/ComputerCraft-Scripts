@@ -24,7 +24,6 @@ function TemperatureKillSwitch(temp)
         reactor.stopReactor()
         temp_restarted = true
         msg = "Reactor has gotten too hot. Powering down..."
-
         print(msg)
 
         -- If over the max temp and already restarted, stays off
@@ -74,7 +73,6 @@ function ShieldKillSwitch(shield, reactorStatus)
         -- Recovers Field Generation
         RecoverFieldGeneration(ReactorCore:GetFieldPercentageRemaining(), ReactorCore:GetInputFlux())
         print(msg)
-
     else
         msg = "Reactor Containment is healthy"
         print(msg)
@@ -121,9 +119,10 @@ function RecoverFieldGeneration(shield, inputFlux)
             shield = ReactorCore:GetFieldPercentageRemaining()
         end
 
+        local rescueAmount = ReactorCore.originalInputFlux + 5000
         -- Once recovered, reset the input flux to its original value
-        ReactorCore:SetInputFlux(ReactorCore.originalInputFlux)
-        msg = ("Field recovered. Resetting input flux to original value: " .. ReactorCore.originalInputFlux)
+        ReactorCore:SetInputFlux(rescueAmount)
+        msg = ("Field recovered. Resetting input flux to original value + 5000: " .. rescueAmount)
         print(msg)
         -- Logs Errors and Info
         if (Customisation.ENABLE_LOGGING) then

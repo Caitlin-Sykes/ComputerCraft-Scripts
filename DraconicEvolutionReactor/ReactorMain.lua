@@ -206,82 +206,57 @@ end
 
 -- Function to automatically adjust energy output
 function AutomaticEnergyAdjustment()
-
-    -- provides a lock to cease all increase thresholds
-    local lockIncreaseAmount = false
-
-    -- Continuously monitor the reactor
+    -- While automatic monitoring is enabled, field percentage is above the minimum, and the reactor isn't warming up
     while Customisation.AUTOMATIC_MONITORING and ReactorCore:GetFieldPercentageRemaining() >
-        Customisation.MIN_FIELD_PERCENT and ReactorCore:GetOutputFluxVal() < Customisation.MAX_INCREASE_THRESHOLD and
-        not lockIncreaseAmount and ReactorCore:GetReactorInfo() ~= "warming_up" do
-
-        -- Get the reactor's current field generation and output flux
+        Customisation.MIN_FIELD_PERCENT and ReactorCore:GetReactorInfo() ~= "warming_up" and
+        ReactorCore:GetOutputFluxVal() < Customisation.MAX_INCREASE_THRESHOLD do
         local reactorInfo = ReactorCore:GetReactorInfo()
-        local outputFluxObj = ReactorCore:GetOutputFlux()
-        local fieldGeneration = reactorInfo.fieldStrength
 
-        -- Iterate through the defined increments
-        for _, increment in ipairs(Customisation.INCREMENTS) do
+        -- Factors
+        local temp = ReactorCore:GetTemperaturePercentage() / 100
+        local field = ReactorCore:GetFieldPercentageRemaining() / 100
+        local saturation = ReactorCore:GetEnergyPercentage() / 100
+        local conversion = ReactorCore:GetFuelPercentageRemaining() / 100
 
-            -- Fetch the current output flux before each adjustment
-            outputFluxObj = ReactorCore:GetOutputFlux()
-            local currentOutputFlux = outputFluxObj.getSignalLowFlow()
+        -- Fetch weights
+        local weight_temp = Customisation.WEIGHT_TEMP
+        local weight_saturation = Customisation.WEIGHT_SATURATION
+        local weight_field = Customisation.WEIGHT_FIELD
+        local weight_conversion = Customisation.WEIGHT_CONVERSION_FIELD
 
-            -- Increase the output gate by the current increment
-            local newOutputFlux = currentOutputFlux + increment
-            ReactorCore:SetOutputFlux(newOutputFlux)
-            local msg = "Increased output gate by " .. increment .. ". New output flux: " .. newOutputFlux
+        -- Adjust fIn (low is better)
+        local inputFlux_contribution = ((1 - temp) * weight_temp + (1 - saturation) * weight_saturation + (1 - field) *
+                                           weight_field) / (weight_temp + weight_saturation + weight_field)
+        local fIn = math.max(0.0, math.min(1.0, inputFlux_contribution))
 
-            print(msg)
-            if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error") then
-                LogMessage(msg, "[INFO]")
-            end
+        -- Adjust fOut (high is better)
+        local outputFlux_contribution = (field * weight_field + conversion * weight_conversion) /
+                                            (weight_field + weight_conversion)
+        local fOut = math.max(0.0, math.min(1.0, outputFlux_contribution))
 
-            -- Wait for the defined interval, checking safety every couple of seconds
-            local elapsedTime = 0
-            while elapsedTime < Customisation.WAIT_INTERVAL do
-                -- Check the current field generation after the increase
-                print(elapsedTime)
-                reactorInfo = ReactorCore:GetReactorInfo()
-                fieldGeneration = reactorInfo.fieldStrength
+        -- Convert to whole numbers (scale factor: Customisation.SCALE_FACTOR)
+        local scale_factor = Customisation.SCALE_FACTOR or 100
+        local scaled_fIn = math.floor(fIn * scale_factor + 0.5) -- Round to nearest integer
+        local scaled_fOut = math.floor(fOut * scale_factor + 0.5)
 
-                -- If the field generation is not safe, stop increasing the output gate
-                if fieldGeneration < Customisation.MIN_FIELD_PERCENT then
-                    local errorMsg = "Field generation below safe threshold! Output gate increase halted."
-                    print(errorMsg)
-                    if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE == "error") then
-                        LogMessage(errorMsg, "[ERROR]")
-                    end
-                    -- Attempts to recover it
-                    RecoverFieldGeneration(ReactorCore:GetFieldPercentageRemaining(), ReactorCore:GetInputFluxVal())
-                    lockIncreaseAmount = true
-                    return -- Stop the adjustment process if field is unsafe
-                end
+        -- Apply adjusted flux values to the reactor
+        ReactorCore:SetInputFlux(scaled_fIn)
+        ReactorCore:SetOutputFlux(scaled_fOut)
 
-                -- Wait for the safety check interval before checking again
-                os.sleep(Customisation.SAFETY_INTERVAL)
-                elapsedTime = elapsedTime + Customisation.SAFETY_INTERVAL
-            end
-        end
+        -- Debugging and Logging
+        local inputDebugMsg = "Setting input flux gate to: " .. scaled_fIn
+        local outputDebugMsg = "Setting output flux gate to: " .. scaled_fOut
+        local cycleCompleteMsg = "Completed output gate cycle. Waiting " .. Customisation.ADJUST_INTERVAL ..
+                                     " seconds before restarting."
 
-        -- If locked, increase input flux until its safe again
-        if lockIncreaseAmount and fieldGeneration < Customisation.MIN_FIELD_PERCENT then
-            local amnt = ReactorCore:GetInputFlux()
-            amnt = amnt + 1000
-            ReactorCore:SetInputFlux(amnt)
-            -- If locked but above the min field
-        else
-            if lockIncreaseAmount and fieldGeneration > Customisation.TARGET_FIELD_PERCENT then
-                lockIncreaseAmount = false
-            end
-        end
-
-        -- After completing all increments, wait before starting the cycle again
-        local cycleCompleteMsg = "Completed output gate cycle. Waiting .. " .. Customisation.ADJUST_INTERVAL ..
-                                     "before restarting."
         print(cycleCompleteMsg)
-        if (Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error") then
+        print(inputDebugMsg)
+        print(outputDebugMsg)
+
+        if Customisation.ENABLE_LOGGING and Customisation.LOGGING_STATE ~= "error" then
             LogMessage(cycleCompleteMsg, "[INFO]")
+            LogMessage(inputDebugMsg, "[DEBUG]")
+            LogMessage(outputDebugMsg, "[DEBUG]")
         end
 
         -- Wait for the cycle reset interval before restarting

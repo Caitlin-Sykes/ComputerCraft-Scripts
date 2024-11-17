@@ -72,19 +72,17 @@ Customisation.ENABLE_LOGGING = true;
 -- Automatic Monitoring Settings
 -- -----------------------------------------------------------------------------
 
--- RECOVERY_TIMEOUT - how long the reactor will attempt to wait for an auto recover, before it manually recovers
--- if after the timeout, its still dangerously low, takes emergency measures
--- INCREMENTS - the periods by which the output gate increases
--- WAIT_INTERVAL - how long it waits before increasing again
--- SAFETY_INTERVAL - how many seconds in the wait interval it checks the field generation. Ie, if this is five, and WAIT_INTERVAL is 240, every five seconds of the four minutes
 -- ADJUST_INTERVAL - how long it waits before restarting the output cycle gate again
 -- MAX_INCREASE_THRESHOLD - after this threshold is reached, the output gate will no longer be increased
-Customisation.RECOVERY_TIMEOUT = 120
-Customisation.INCREMENTS = {1000, 10000, 1000000}
-Customisation.WAIT_INTERVAL = 240 -- 4 mins
-Customisation.SAFETY_INTERVAL = 5
-Customisation.ADJUST_INTERVAL = 1800 -- 30 mins
+Customisation.ADJUST_INTERVAL = 30
 Customisation.MAX_INCREASE_THRESHOLD = 7000000
+
+-- The weights for the program
+Customisation.WEIGHT_TEMP = 0.2
+Customisation.WEIGHT_FIELD = 0.9
+Customisation.WEIGHT_SATURATION = 0.4
+Customisation.WEIGHT_CONVERSION_FIELD = 0.6
+Customisation.SCALE_FACTOR = 1000000
 
 -- -----------------------------------------------------------------------------
 -- Reactor Init Settings

@@ -89,6 +89,20 @@ function ReactorCore:GetFieldPercentageRemaining()
     return fieldPercent
 end
 
+-- Method to return the energy saturation remaining
+function ReactorCore:GetEnergyPercentage()
+    local reactorInfo = reactor.getReactorInfo()
+    energyPercent = math.ceil(reactorInfo.energySaturation / reactorInfo.maxEnergySaturation * 10000) * .01
+    return energyPercent
+end
+
+-- Method to return the temperature as a percentagr
+function ReactorCore:GetTemperaturePercentage()
+    local reactorInfo = reactor.getReactorInfo()
+    energyPercent = math.ceil(reactorInfo.temperature / 8000 * 10000) * .01
+    return energyPercent
+end
+
 -- Function to get the current time in a readable format
 function GetCurrentTime()
     return os.date("%Y-%m-%d %H:%M:%S")
