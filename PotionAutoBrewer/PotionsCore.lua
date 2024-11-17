@@ -90,8 +90,15 @@ function PotionsCore:PotionCrafting(potion, chest_cluster)
                 name = potion.base_potion
             }, chest_cluster.basin, 1000)
 
-            -- Exporting the item from the chest to the basin
-            -- chest_modem.pushItems(chest_cluster.basin, 1)
+            -- Check each slot in the chest for the ingredient
+            for slot, chestItem in pairs(chest_modem.list()) do
+                if chestItem.name == potion.ingredient then
+                    -- Export one of the ingredient to the basin
+                    chest_modem.pushItems(chest_cluster.basin, slot, 1)
+                    print("Exported " .. potion.ingredient .. " from slot " .. slot .. " to basin")
+                    break
+                end
+            end
         end
 
     else
@@ -211,17 +218,29 @@ function PotionCraftingManagement(potion, crafted)
         end
         -- Else if it takes up a chest but does not have an active recipe, reset
     else
-        for _, chestId in ipairs(crafted) do
-            print("KILLING JOB")
-            -- Reset each chest status to idle
-            local chest_to_reset = GetChestById(chestId)
+        -- If singular chest needs killed, do it manually
+        if type(crafted) == "string" then
+            print("Shutting down cluster with chest id: " .. crafted)
+            local chest_to_reset = GetChestById(crafted)
             chest_to_reset.status = "idle"
 
             -- Turn off the cluster
             cur_output = colours.subtract(cur_output, chest_to_reset.cable)
             redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
-        end
 
+            -- else iterate through
+        else
+            for _, chestId in ipairs(crafted) do
+                print("Shutting down cluster with chest id: " .. chestId)
+                -- Reset each chest status to idle
+                local chest_to_reset = GetChestById(chestId)
+                chest_to_reset.status = "idle"
+
+                -- Turn off the cluster
+                cur_output = colours.subtract(cur_output, chest_to_reset.cable)
+                redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
+            end
+        end
     end
 end
 
@@ -267,6 +286,7 @@ function ItemCraftingManagement(item, crafted)
     elseif (ME.isItemCrafting({
         name = item.result
     }) and crafted ~= false) then
+        print("wrong")
         -- Looks for the chest that has the corresponding item
         local assignedChestIds = AssignChest(item, "item")
 
@@ -291,6 +311,8 @@ function ItemCraftingManagement(item, crafted)
         end
         -- Else if it takes up a chest but does not have an active recipe, reset
     else
+        print("HEY IM HERE")
+        print(textutils.serialize(crafted))
         for _, chestId in ipairs(crafted) do
             -- Reset each chest status to idle
             local chest_to_reset = GetChestById(chestId)
