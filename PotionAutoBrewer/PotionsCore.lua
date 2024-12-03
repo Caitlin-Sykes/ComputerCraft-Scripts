@@ -286,7 +286,6 @@ function ItemCraftingManagement(item, crafted)
     elseif (ME.isItemCrafting({
         name = item.result
     }) and crafted ~= false) then
-        print("wrong")
         -- Looks for the chest that has the corresponding item
         local assignedChestIds = AssignChest(item, "item")
 
@@ -311,8 +310,6 @@ function ItemCraftingManagement(item, crafted)
         end
         -- Else if it takes up a chest but does not have an active recipe, reset
     else
-        print("HEY IM HERE")
-        print(textutils.serialize(crafted))
         for _, chestId in ipairs(crafted) do
             -- Reset each chest status to idle
             local chest_to_reset = GetChestById(chestId)
@@ -479,6 +476,16 @@ function IsItemInIngredients(item, ingredients)
         end
     end
     return false
+end
+
+-- A function to turn off all the mechanisms
+function PotionsCore:TurnOffCreateMechanisms()
+    -- For each configured chest cluster
+    for _, chest in pairs(Chests.chests) do
+        -- Turn off the cluster
+        cur_output = colours.subtract(cur_output, chest.cable)
+        redstone.setBundledOutput(Customisation.BUNDLED_CABLE_SIDE, cur_output)
+    end
 end
 
 return PotionsCore

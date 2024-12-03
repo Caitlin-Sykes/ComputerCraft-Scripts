@@ -24,6 +24,7 @@ function CheckForPotionRecipe()
                                 name = "minecraft:glass_bottle"
                             }, "create:brass_tunnel_0")
                         else
+                            print("Turning off the power...")
                             -- Turn off the power
                             cur_output = colours.subtract(cur_output, cableColor)
                             redstone.setBundledOutput(bundledDir, cur_output)
@@ -32,7 +33,7 @@ function CheckForPotionRecipe()
                 end
             end
         end
-        sleep(60)
+        sleep(10)
     end
 end
 

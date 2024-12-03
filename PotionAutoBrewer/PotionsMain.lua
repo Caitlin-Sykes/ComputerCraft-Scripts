@@ -143,6 +143,9 @@ end
 -- Sets up peripherals
 PotionsCore:SetupPeripherals()
 
+-- Turns off the power for all create mechanisms
+PotionsCore:TurnOffCreateMechanisms()
+
 -- Main loop
 parallel.waitForAll(LookForVanillaPotions, LookForPotionsBase, LookForPotionsCorail, LookForPotionsApotheosis,
     LookForPotionsIronsSpellbooks, LookForPotionsEcologics, LookForPotionsArsNouveau, LookForPotionsArsElemental,
